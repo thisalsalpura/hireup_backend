@@ -96,12 +96,12 @@ public class SignUp extends HttpServlet {
                 String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/UserVerification.html");
                 String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
 
-                String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/logo.svg";
-                String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/facebook.svg";
-                String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/instagram.svg";
-                String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/linkedin.svg";
-                String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/x-twitter.svg";
-                String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/youtube.svg";
+                String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
+                String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/facebook.png";
+                String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/instagram.png";
+                String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/linkedin.png";
+                String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/x-twitter.png";
+                String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/youtube.png";
 
                 if (!verificationEmailTemplate.isEmpty()) {
                     String filledVerificationEmailTemplate = verificationEmailTemplate
