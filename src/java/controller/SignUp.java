@@ -93,20 +93,37 @@ public class SignUp extends HttpServlet {
 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                String verificationEmailTemplatePath = getServletContext().getRealPath("/templates/emails/UserVerification.html");
+                String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/UserVerification.html");
                 String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
+
+                String logoURL = "http://localhost:8080/hireup_backend/assets/icons/logo.svg";
+                String facebookURL = "http://localhost:8080/hireup_backend/assets/icons/facebook.svg";
+                String instagramURL = "http://localhost:8080/hireup_backend/assets/icons/instagram.svg";
+                String linkedinURL = "http://localhost:8080/hireup_backend/assets/icons/linkedin.svg";
+                String xtwitterURL = "http://localhost:8080/hireup_backend/assets/icons/x-twitter.svg";
+                String youtubeURL = "http://localhost:8080/hireup_backend/assets/icons/youtube.svg";
 
                 if (!verificationEmailTemplate.isEmpty()) {
                     String filledVerificationEmailTemplate = verificationEmailTemplate
+                            .replace("{{logo}}", logoURL)
                             .replace("{{date}}", sdf.format(new Date()))
-                            .replace("{{code}}", verificationCode);
+                            .replace("{{code}}", verificationCode)
+                            .replace("{{facebookIcon}}", facebookURL)
+                            .replace("{{instagramIcon}}", instagramURL)
+                            .replace("{{linkedinIcon}}", linkedinURL)
+                            .replace("{{x-twitterIcon}}", xtwitterURL)
+                            .replace("{{youtubeIcon}}", youtubeURL);
 
-                    new Thread(new Runnable() {
+                    System.out.println("Email body size (bytes): " + filledVerificationEmailTemplate.getBytes("UTF-8").length);
+
+                    Runnable r = new Runnable() {
                         @Override
                         public void run() {
                             Mail.sendMail(email, "HireUp - Verification", filledVerificationEmailTemplate);
                         }
-                    }).start();
+                    };
+                    Thread t = new Thread(r);
+                    t.start();
                 }
 
                 responseObject.addProperty("status", true);

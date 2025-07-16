@@ -7,6 +7,7 @@ package model;
 import entity.User;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import org.hibernate.Criteria;
@@ -44,17 +45,24 @@ public class Util {
     }
 
     // Load Email Template
-    public static String loadEmailTemplate(String absolutePath) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(absolutePath), StandardCharsets.UTF_8))) {
+    public static String loadEmailTemplate(String path) {
+        try {
+            FileInputStream fis = new FileInputStream(path);
+            InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
+            BufferedReader br = new BufferedReader(isr);
+
             StringBuilder content = new StringBuilder();
             String line;
-            while ((line = reader.readLine()) != null) {
+
+            while ((line = br.readLine()) != null) {
                 content.append(line).append("\n");
             }
+
             return content.toString();
+        } catch (IOException e) {
+            return null;
         } catch (Exception e) {
-            e.printStackTrace();
-            return "";
+            return null;
         }
     }
 }
