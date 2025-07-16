@@ -96,12 +96,12 @@ public class SignUp extends HttpServlet {
                 String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/UserVerification.html");
                 String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
 
-                String logoURL = "http://localhost:8080/hireup_backend/assets/icons/logo.svg";
-                String facebookURL = "http://localhost:8080/hireup_backend/assets/icons/facebook.svg";
-                String instagramURL = "http://localhost:8080/hireup_backend/assets/icons/instagram.svg";
-                String linkedinURL = "http://localhost:8080/hireup_backend/assets/icons/linkedin.svg";
-                String xtwitterURL = "http://localhost:8080/hireup_backend/assets/icons/x-twitter.svg";
-                String youtubeURL = "http://localhost:8080/hireup_backend/assets/icons/youtube.svg";
+                String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/logo.svg";
+                String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/facebook.svg";
+                String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/instagram.svg";
+                String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/linkedin.svg";
+                String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/x-twitter.svg";
+                String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_frontend/master/src/assets/icons/youtube.svg";
 
                 if (!verificationEmailTemplate.isEmpty()) {
                     String filledVerificationEmailTemplate = verificationEmailTemplate
