@@ -13,9 +13,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import model.Mail;
 import model.Util;
 import org.hibernate.Criteria;
@@ -29,29 +31,15 @@ import org.hibernate.criterion.Restrictions;
 @WebServlet(name = "SignUp", urlPatterns = {"/SignUp"})
 public class SignUp extends HttpServlet {
 
-    private void setCorsHeaders(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-        response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
-    }
-
-    @Override
-    protected void doOptions(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        setCorsHeaders(response);
-    }
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        setCorsHeaders(response);
-
         Gson gson = new Gson();
-        JsonObject user = gson.fromJson(request.getReader(), JsonObject.class);
+        JsonObject jsonObject = gson.fromJson(request.getReader(), JsonObject.class);
 
-        String fname = user.get("fname").getAsString();
-        String lname = user.get("lname").getAsString();
-        final String email = user.get("email").getAsString();
-        String password = user.get("password").getAsString();
+        String fname = jsonObject.get("fname").getAsString();
+        String lname = jsonObject.get("lname").getAsString();
+        final String email = jsonObject.get("email").getAsString();
+        String password = jsonObject.get("password").getAsString();
 
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
@@ -78,17 +66,17 @@ public class SignUp extends HttpServlet {
             if (!criteria.list().isEmpty()) {
                 responseObject.addProperty("message", "This Email Address is Already Exists!");
             } else {
-                User u = new User();
-                u.setFname(fname);
-                u.setLname(lname);
-                u.setEmail(email);
-                u.setPassword(password);
-                u.setJoined_date(new Date());
+                User user = new User();
+                user.setFname(fname);
+                user.setLname(lname);
+                user.setEmail(email);
+                user.setPassword(password);
+                user.setJoined_date(new Date());
 
                 final String verificationCode = Util.generateVerificationCode(session);
-                u.setVerification(verificationCode);
+                user.setVerification(verificationCode);
 
-                session.save(u);
+                session.save(user);
                 session.beginTransaction().commit();
 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -114,8 +102,6 @@ public class SignUp extends HttpServlet {
                             .replace("{{x-twitterIcon}}", xtwitterURL)
                             .replace("{{youtubeIcon}}", youtubeURL);
 
-                    System.out.println("Email body size (bytes): " + filledVerificationEmailTemplate.getBytes("UTF-8").length);
-
                     Runnable r = new Runnable() {
                         @Override
                         public void run() {
@@ -124,6 +110,14 @@ public class SignUp extends HttpServlet {
                     };
                     Thread t = new Thread(r);
                     t.start();
+
+                    HttpSession httpSession = request.getSession();
+                    httpSession.setAttribute("email", email);
+                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                    cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    cookie.setSecure(true);
+                    response.addCookie(cookie);
                 }
 
                 responseObject.addProperty("status", true);
