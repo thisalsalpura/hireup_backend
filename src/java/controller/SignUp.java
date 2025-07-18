@@ -7,6 +7,8 @@ package controller;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import entity.User;
+import entity.User_Status;
+import entity.User_Type;
 import hibernate.HibernateUtil;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -75,6 +77,16 @@ public class SignUp extends HttpServlet {
 
                 final String verificationCode = Util.generateVerificationCode(session);
                 user.setVerification(verificationCode);
+
+                Criteria criteria1 = session.createCriteria(User_Status.class);
+                criteria1.add(Restrictions.eq("value", "Active"));
+                User_Status status = (User_Status) criteria1.list().get(0);
+                user.setUser_Status(status);
+
+                Criteria criteria2 = session.createCriteria(User_Type.class);
+                criteria2.add(Restrictions.eq("value", "Buyer"));
+                User_Type type = (User_Type) criteria2.list().get(0);
+                user.setUser_Type(type);
 
                 session.save(user);
                 session.beginTransaction().commit();

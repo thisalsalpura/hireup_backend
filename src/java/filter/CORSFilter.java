@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author User
  */
-
 @WebFilter("/*")
 public class CORSFilter implements Filter {
 
@@ -41,6 +40,10 @@ public class CORSFilter implements Filter {
             servletResponse.setStatus(HttpServletResponse.SC_OK);
             return;
         }
+
+        servletResponse.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        servletResponse.setHeader("Pragma", "no-cache");
+        servletResponse.setHeader("Expires", "0");
 
         chain.doFilter(request, response);
     }

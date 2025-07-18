@@ -7,6 +7,7 @@ package controller;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import entity.User;
+import entity.User_Status;
 import hibernate.HibernateUtil;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -49,14 +50,19 @@ public class SignIn extends HttpServlet {
         } else {
             Session session = HibernateUtil.getSessionFactory().openSession();
 
-            Criteria criteria = session.createCriteria(User.class);
-            criteria.add(Restrictions.eq("email", email));
-            criteria.add(Restrictions.eq("password", password));
+            Criteria criteria = session.createCriteria(User_Status.class);
+            criteria.add(Restrictions.eq("value", "Active"));
+            User_Status status = (User_Status) criteria.list().get(0);
 
-            if (criteria.list().isEmpty()) {
+            Criteria criteria1 = session.createCriteria(User.class);
+            criteria1.add(Restrictions.eq("email", email));
+            criteria1.add(Restrictions.eq("password", password));
+            criteria1.add(Restrictions.eq("user_Status", status));
+
+            if (criteria1.list().isEmpty()) {
                 responseObject.addProperty("message", "Invalid Credentials!");
             } else {
-                User user = (User) criteria.list().get(0);
+                User user = (User) criteria1.list().get(0);
 
                 String verificationCode = user.getVerification();
 

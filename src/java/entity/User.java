@@ -40,9 +40,6 @@ public class User implements Serializable {
     @Column(name = "password", length = 20, nullable = false)
     private String password;
 
-    @Column(name = "mobile", length = 10, nullable = true)
-    private String mobile;
-
     @Column(name = "dob", nullable = true)
     private Date dob;
 
@@ -57,11 +54,11 @@ public class User implements Serializable {
     private Locale locale;
 
     @ManyToOne
-    @JoinColumn(name = "user_type_id", nullable = true)
+    @JoinColumn(name = "user_type_id", nullable = false)
     private User_Type user_Type;
 
     @ManyToOne
-    @JoinColumn(name = "user_status_id", nullable = true)
+    @JoinColumn(name = "user_status_id", nullable = false)
     private User_Status user_Status;
 
     @ManyToOne
@@ -106,14 +103,6 @@ public class User implements Serializable {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getMobile() {
-        return mobile;
-    }
-
-    public void setMobile(String mobile) {
-        this.mobile = mobile;
     }
 
     public Date getDob() {

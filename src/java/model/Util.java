@@ -65,4 +65,9 @@ public class Util {
             return null;
         }
     }
+
+    // Validate Postal Code
+    public static boolean isPostalCodeValid(String code) {
+        return code.matches("^\\d{5}$");
+    }
 }
