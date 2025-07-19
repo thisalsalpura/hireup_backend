@@ -11,7 +11,6 @@ import hibernate.HibernateUtil;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,23 +24,23 @@ import org.hibernate.criterion.Restrictions;
  *
  * @author User
  */
-@WebServlet(name = "ChangePassword", urlPatterns = {"/ChangePassword"})
-public class ChangePassword extends HttpServlet {
+@WebServlet(name = "ChangeForgotPassword", urlPatterns = {"/ChangeForgotPassword"})
+public class ChangeForgotPassword extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Gson gson = new Gson();
         JsonObject jsonObject = gson.fromJson(request.getReader(), JsonObject.class);
 
-        String currentPassword = jsonObject.get("currentPassword").getAsString();
+        String fpVerification = jsonObject.get("fpVerification").getAsString();
         String newPassword = jsonObject.get("newPassword").getAsString();
         String confirmPassword = jsonObject.get("confirmPassword").getAsString();
 
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
 
-        if (currentPassword.isEmpty()) {
-            responseObject.addProperty("message", "Something went wrong! Please try again later.");
+        if (fpVerification.isEmpty()) {
+            responseObject.addProperty("message", "Please enter your Verification Code!");
         } else if (newPassword.isEmpty()) {
             responseObject.addProperty("message", "Please enter your New Password!");
         } else if (!Util.isPasswordValid(newPassword)) {
@@ -51,38 +50,33 @@ public class ChangePassword extends HttpServlet {
         } else if (!newPassword.matches(confirmPassword)) {
             responseObject.addProperty("message", "Doesn't matched New Password and Confirm Password!");
         } else {
-
-            Session session = HibernateUtil.getSessionFactory().openSession();
-
             HttpSession httpSession = request.getSession(false);
 
-            if ((httpSession != null) && (httpSession.getAttribute("user") != null)) {
-                User user = (User) httpSession.getAttribute("user");
+            if ((httpSession != null) && (httpSession.getAttribute("email") != null) && (httpSession.getAttribute("verification") != null)) {
+                if (!fpVerification.equals(httpSession.getAttribute("verification"))) {
+                    responseObject.addProperty("message", "Invalid Verification Code!");
+                } else {
+                    Session session = HibernateUtil.getSessionFactory().openSession();
 
-                Criteria criteria = session.createCriteria(User.class);
-                criteria.add(Restrictions.eq("email", user.getEmail()));
+                    Criteria criteria = session.createCriteria(User.class);
+                    criteria.add(Restrictions.eq("email", httpSession.getAttribute("email")));
 
-                if (!criteria.list().isEmpty()) {
-                    User u = (User) criteria.list().get(0);
-                    u.setPassword(newPassword);
+                    if (!criteria.list().isEmpty()) {
+                        User user = (User) criteria.list().get(0);
+                        user.setPassword(newPassword);
 
-                    httpSession.setAttribute("user", u);
-                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    cookie.setSecure(true);
-                    response.addCookie(cookie);
+                        session.merge(user);
+                        session.beginTransaction().commit();
 
-                    session.merge(u);
-                    session.beginTransaction().commit();
+                        responseObject.addProperty("status", true);
+                        responseObject.addProperty("message", "User password updated Successfully!");
+                    }
 
-                    responseObject.addProperty("status", true);
-                    responseObject.addProperty("message", "User password updated Successfully!");
+                    session.close();
                 }
+            } else {
+                responseObject.addProperty("message", "Something went wrong! Please try again later.");
             }
-
-            session.close();
-
         }
 
         String responseText = gson.toJson(responseObject);

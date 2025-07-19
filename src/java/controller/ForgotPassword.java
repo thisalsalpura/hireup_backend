@@ -7,8 +7,6 @@ package controller;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import entity.User;
-import entity.User_Status;
-import entity.User_Type;
 import hibernate.HibernateUtil;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -30,70 +28,33 @@ import org.hibernate.criterion.Restrictions;
  *
  * @author User
  */
-@WebServlet(name = "SignUp", urlPatterns = {"/SignUp"})
-public class SignUp extends HttpServlet {
+@WebServlet(name = "ForgotPassword", urlPatterns = {"/ForgotPassword"})
+public class ForgotPassword extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Gson gson = new Gson();
         JsonObject jsonObject = gson.fromJson(request.getReader(), JsonObject.class);
 
-        String fname = jsonObject.get("fname").getAsString();
-        String lname = jsonObject.get("lname").getAsString();
-        final String email = jsonObject.get("email").getAsString();
-        String password = jsonObject.get("password").getAsString();
+        String email = jsonObject.get("email").getAsString();
 
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
 
-        if (fname.isEmpty()) {
-            responseObject.addProperty("message", "Please enter your First Name!");
-        } else if (lname.isEmpty()) {
-            responseObject.addProperty("message", "Please enter your Last Name!");
-        } else if (email.isEmpty()) {
+        if (email.isEmpty()) {
             responseObject.addProperty("message", "Please enter your Email Address!");
-        } else if (!Util.isEmailValid(email)) {
-            responseObject.addProperty("message", "Please enter valid Email Address!");
-        } else if (password.isEmpty()) {
-            responseObject.addProperty("message", "Please enter your Password!");
-        } else if (!Util.isPasswordValid(password)) {
-            responseObject.addProperty("message", "Please enter valid Password! Password must be 8-20 characters long and include Uppercase, Lowercase, Number, and Special Character.");
         } else {
-
             Session session = HibernateUtil.getSessionFactory().openSession();
 
             Criteria criteria = session.createCriteria(User.class);
             criteria.add(Restrictions.eq("email", email));
 
             if (!criteria.list().isEmpty()) {
-                responseObject.addProperty("message", "This Email Address is Already Exists!");
-            } else {
-                User user = new User();
-                user.setFname(fname);
-                user.setLname(lname);
-                user.setEmail(email);
-                user.setPassword(password);
-                user.setJoined_date(new Date());
-
                 final String verificationCode = Util.generateVerificationCode(session);
-                user.setVerification(verificationCode);
-
-                Criteria criteria1 = session.createCriteria(User_Status.class);
-                criteria1.add(Restrictions.eq("value", "Active"));
-                User_Status status = (User_Status) criteria1.list().get(0);
-                user.setUser_Status(status);
-
-                Criteria criteria2 = session.createCriteria(User_Type.class);
-                criteria2.add(Restrictions.eq("value", "Buyer"));
-                User_Type type = (User_Type) criteria2.list().get(0);
-                user.setUser_Type(type);
-
-                session.save(user);
-                session.beginTransaction().commit();
 
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/UserVerification.html");
+                String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/ForgotPasswordVerification.html");
                 String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
 
                 String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
@@ -117,27 +78,29 @@ public class SignUp extends HttpServlet {
                     Runnable r = new Runnable() {
                         @Override
                         public void run() {
-                            Mail.sendMail(email, "HireUp - User Verification", filledVerificationEmailTemplate);
+                            Mail.sendMail(email, "HireUp - Forgot Password Verification", filledVerificationEmailTemplate);
                         }
                     };
                     Thread t = new Thread(r);
                     t.start();
-
-                    HttpSession httpSession = request.getSession();
-                    httpSession.setAttribute("email", email);
-                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    cookie.setSecure(true);
-                    response.addCookie(cookie);
                 }
 
+                HttpSession httpSession = request.getSession();
+                httpSession.setAttribute("email", email);
+                httpSession.setAttribute("verification", verificationCode);
+                Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                cookie.setSecure(true);
+                response.addCookie(cookie);
+
                 responseObject.addProperty("status", true);
-                responseObject.addProperty("message", "User registered Successfully! Please check your Email Address for the Verification.");
+                responseObject.addProperty("message", "Please check your Email Address for the Verification.");
+            } else {
+                responseObject.addProperty("message", "Invalid Email Address!");
             }
 
             session.close();
-
         }
 
         String responseText = gson.toJson(responseObject);

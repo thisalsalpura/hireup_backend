@@ -17,6 +17,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -115,35 +116,45 @@ public class UserProfileUpdate extends HttpServlet {
                     } catch (ParseException ex) {
                         ex.printStackTrace();
                     }
-                    u.setDob(dob);
 
-                    User_Has_Address user_has_address;
-                    if (u.getUser_Has_Address() != null) {
-                        user_has_address = u.getUser_Has_Address();
-                        user_has_address.setLine_1(line1);
-                        user_has_address.setLine_2(line2);
-                        user_has_address.setCity(city);
-                        user_has_address.setPostal_code(pcode);
-                        session.merge(user_has_address);
+                    if (dob.before(new Date())) {
+                        u.setDob(dob);
+
+                        User_Has_Address user_has_address;
+                        if (u.getUser_Has_Address() != null) {
+                            user_has_address = u.getUser_Has_Address();
+                            user_has_address.setLine_1(line1);
+                            user_has_address.setLine_2(line2);
+                            user_has_address.setCity(city);
+                            user_has_address.setPostal_code(pcode);
+                            session.merge(user_has_address);
+                        } else {
+                            user_has_address = new User_Has_Address();
+                            user_has_address.setLine_1(line1);
+                            user_has_address.setLine_2(line2);
+                            user_has_address.setCity(city);
+                            user_has_address.setPostal_code(pcode);
+                            session.save(user_has_address);
+                        }
+
+                        u.setUser_Has_Address(user_has_address);
+                        u.setLocale(locale);
+
+                        httpSession.setAttribute("user", u);
+                        Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                        cookie.setHttpOnly(true);
+                        cookie.setPath("/");
+                        cookie.setSecure(true);
+                        response.addCookie(cookie);
+
+                        session.merge(u);
+                        session.beginTransaction().commit();
+
+                        responseObject.addProperty("status", true);
+                        responseObject.addProperty("message", "User profile updated Successfully!");
                     } else {
-                        user_has_address = new User_Has_Address();
-                        user_has_address.setLine_1(line1);
-                        user_has_address.setLine_2(line2);
-                        user_has_address.setCity(city);
-                        user_has_address.setPostal_code(pcode);
-                        session.save(user_has_address);
+                        responseObject.addProperty("message", "Invalid Date of Birth!");
                     }
-
-                    u.setUser_Has_Address(user_has_address);
-                    u.setLocale(locale);
-
-                    httpSession.setAttribute("user", u);
-                    
-                    session.merge(u);
-                    session.beginTransaction().commit();
-
-                    responseObject.addProperty("status", true);
-                    responseObject.addProperty("message", "User profile updated Successfully!");
                 }
 
                 session.close();

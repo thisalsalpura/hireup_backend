@@ -39,6 +39,7 @@ public class SignIn extends HttpServlet {
 
         String email = jsonObject.get("email").getAsString();
         String password = jsonObject.get("password").getAsString();
+        boolean rememberMe = jsonObject.get("rememberMe").getAsBoolean();
 
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
@@ -72,11 +73,6 @@ public class SignIn extends HttpServlet {
 
                 if (!verificationCode.equals("VERIFIED!")) {
                     httpSession.setAttribute("email", email);
-                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    cookie.setSecure(true);
-                    response.addCookie(cookie);
 
                     responseObject.addProperty("message", "NVERIFY");
 
@@ -106,7 +102,7 @@ public class SignIn extends HttpServlet {
                         Runnable r = new Runnable() {
                             @Override
                             public void run() {
-                                Mail.sendMail(email, "HireUp - Verification", filledVerificationEmailTemplate);
+                                Mail.sendMail(email, "HireUp - User Verification", filledVerificationEmailTemplate);
                             }
                         };
                         Thread t = new Thread(r);
@@ -114,14 +110,31 @@ public class SignIn extends HttpServlet {
                     }
                 } else {
                     httpSession.setAttribute("user", user);
-                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    cookie.setSecure(true);
-                    response.addCookie(cookie);
 
                     responseObject.addProperty("message", "WVERIFY");
                 }
+
+                Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                cookie.setSecure(true);
+                response.addCookie(cookie);
+
+                Cookie cookie1;
+                if (rememberMe) {
+                    cookie1 = new Cookie("rememberMe", email);
+                    cookie1.setMaxAge(60 * 60 * 24 * 7);
+                    cookie1.setHttpOnly(true);
+                    cookie1.setPath("/");
+                    cookie1.setSecure(true);
+                    response.addCookie(cookie1);
+                } else {
+                    cookie1 = new Cookie("rememberMe", "");
+                    cookie1.setMaxAge(0);
+                    cookie1.setPath("/");
+                    response.addCookie(cookie1);
+                }
+
             }
 
             session.close();

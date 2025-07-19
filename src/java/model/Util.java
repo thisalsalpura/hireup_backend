@@ -32,7 +32,6 @@ public class Util {
 
     // Generate Verification Code
     public static String generateVerificationCode(Session session) {
-
         Criteria criteria = session.createCriteria(User.class);
         String code;
 
