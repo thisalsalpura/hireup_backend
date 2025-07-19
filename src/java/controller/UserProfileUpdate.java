@@ -6,13 +6,25 @@ package controller;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import entity.City;
+import entity.Locale;
+import entity.User;
+import entity.User_Has_Address;
+import hibernate.HibernateUtil;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import model.Util;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 
 /**
  *
@@ -28,7 +40,7 @@ public class UserProfileUpdate extends HttpServlet {
 
         String fname = jsonObject.get("fname").getAsString();
         String lname = jsonObject.get("lname").getAsString();
-        String dob = jsonObject.get("dob").getAsString();
+        String dobStr = jsonObject.get("dob").getAsString();
         String line1 = jsonObject.get("line1").getAsString();
         String line2 = jsonObject.get("line2").getAsString();
         String pcode = jsonObject.get("pcode").getAsString();
@@ -38,12 +50,12 @@ public class UserProfileUpdate extends HttpServlet {
 
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
-        
+
         if (fname.isEmpty()) {
             responseObject.addProperty("message", "Please enter your First Name!");
         } else if (lname.isEmpty()) {
             responseObject.addProperty("message", "Please enter your Last Name!");
-        } else if (dob.isEmpty()) {
+        } else if (dobStr.isEmpty()) {
             responseObject.addProperty("message", "Please enter your Date of Birth!");
         } else if (line1.isEmpty()) {
             responseObject.addProperty("message", "Please enter your Address Line 1!");
@@ -60,7 +72,87 @@ public class UserProfileUpdate extends HttpServlet {
         } else if (localeId == 0) {
             responseObject.addProperty("message", "Please select a Locale!");
         } else {
-            
+
+            HttpSession httpSession = request.getSession(false);
+
+            if ((httpSession != null) || (httpSession.getAttribute("user") != null)) {
+                User user = (User) httpSession.getAttribute("user");
+
+                Session session = HibernateUtil.getSessionFactory().openSession();
+
+                Criteria criteria = session.createCriteria(Locale.class);
+                criteria.add(Restrictions.eq("id", localeId));
+
+                Locale locale = null;
+
+                if (!criteria.list().isEmpty()) {
+                    locale = (Locale) criteria.list().get(0);
+                }
+
+                Criteria criteria1 = session.createCriteria(City.class);
+                criteria1.add(Restrictions.eq("id", cityId));
+
+                City city = null;
+
+                if (!criteria1.list().isEmpty()) {
+                    city = (City) criteria1.list().get(0);
+                }
+
+                Criteria criteria2 = session.createCriteria(User.class);
+                criteria2.add(Restrictions.eq("email", user.getEmail()));
+
+                if (!criteria2.list().isEmpty()) {
+                    responseObject.addProperty("status", true);
+
+                    User u = (User) criteria2.list().get(0);
+                    u.setFname(fname);
+                    u.setLname(lname);
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    Date dob = null;
+                    try {
+                        dob = sdf.parse(dobStr);
+                    } catch (ParseException ex) {
+                        ex.printStackTrace();
+                    }
+                    u.setDob(dob);
+
+                    User_Has_Address user_has_address;
+                    if (u.getUser_Has_Address() != null) {
+                        user_has_address = u.getUser_Has_Address();
+                        user_has_address.setLine_1(line1);
+                        user_has_address.setLine_2(line2);
+                        user_has_address.setCity(city);
+                        user_has_address.setPostal_code(pcode);
+                        session.merge(user_has_address);
+                    } else {
+                        user_has_address = new User_Has_Address();
+                        user_has_address.setLine_1(line1);
+                        user_has_address.setLine_2(line2);
+                        user_has_address.setCity(city);
+                        user_has_address.setPostal_code(pcode);
+                        session.save(user_has_address);
+                    }
+
+                    u.setUser_Has_Address(user_has_address);
+                    u.setLocale(locale);
+
+                    httpSession.setAttribute("user", u);
+                    
+                    session.merge(u);
+                    session.beginTransaction().commit();
+
+                    responseObject.addProperty("status", true);
+                    responseObject.addProperty("message", "User profile updated Successfully!");
+                }
+
+                session.close();
+            }
+
         }
+
+        String responseText = gson.toJson(responseObject);
+        response.setContentType("application/json");
+        response.getWriter().write(responseText);
     }
 }

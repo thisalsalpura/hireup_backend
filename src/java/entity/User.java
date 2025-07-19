@@ -13,6 +13,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 /**
@@ -61,7 +62,7 @@ public class User implements Serializable {
     @JoinColumn(name = "user_status_id", nullable = false)
     private User_Status user_Status;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "user_has_address_id", nullable = true)
     private User_Has_Address user_Has_Address;
 
