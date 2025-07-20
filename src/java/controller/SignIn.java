@@ -24,6 +24,7 @@ import model.Util;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  *
@@ -57,7 +58,6 @@ public class SignIn extends HttpServlet {
 
             Criteria criteria1 = session.createCriteria(User.class);
             criteria1.add(Restrictions.eq("email", email));
-            criteria1.add(Restrictions.eq("password", password));
             criteria1.add(Restrictions.eq("user_Status", status));
 
             if (criteria1.list().isEmpty()) {
@@ -65,76 +65,81 @@ public class SignIn extends HttpServlet {
             } else {
                 User user = (User) criteria1.list().get(0);
 
-                String verificationCode = user.getVerification();
+                if (BCrypt.checkpw(password, user.getPassword())) {
 
-                responseObject.addProperty("status", true);
+                    String verificationCode = user.getVerification();
 
-                HttpSession httpSession = request.getSession();
+                    responseObject.addProperty("status", true);
 
-                if (!verificationCode.equals("VERIFIED!")) {
-                    httpSession.setAttribute("email", email);
+                    HttpSession httpSession = request.getSession();
 
-                    responseObject.addProperty("message", "NVERIFY");
+                    if (!verificationCode.equals("VERIFIED!")) {
+                        httpSession.setAttribute("email", email);
 
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                        responseObject.addProperty("message", "NVERIFY");
 
-                    String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/UserVerification.html");
-                    String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                    String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
-                    String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/facebook.png";
-                    String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/instagram.png";
-                    String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/linkedin.png";
-                    String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/x-twitter.png";
-                    String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/youtube.png";
+                        String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/UserVerification.html");
+                        String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
 
-                    if (!verificationEmailTemplate.isEmpty()) {
-                        String filledVerificationEmailTemplate = verificationEmailTemplate
-                                .replace("{{logo}}", logoURL)
-                                .replace("{{date}}", sdf.format(new Date()))
-                                .replace("{{code}}", verificationCode)
-                                .replace("{{facebookIcon}}", facebookURL)
-                                .replace("{{instagramIcon}}", instagramURL)
-                                .replace("{{linkedinIcon}}", linkedinURL)
-                                .replace("{{x-twitterIcon}}", xtwitterURL)
-                                .replace("{{youtubeIcon}}", youtubeURL);
+                        String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
+                        String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/facebook.png";
+                        String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/instagram.png";
+                        String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/linkedin.png";
+                        String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/x-twitter.png";
+                        String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/youtube.png";
 
-                        Runnable r = new Runnable() {
-                            @Override
-                            public void run() {
-                                Mail.sendMail(email, "HireUp - User Verification", filledVerificationEmailTemplate);
-                            }
-                        };
-                        Thread t = new Thread(r);
-                        t.start();
+                        if (!verificationEmailTemplate.isEmpty()) {
+                            String filledVerificationEmailTemplate = verificationEmailTemplate
+                                    .replace("{{logo}}", logoURL)
+                                    .replace("{{date}}", sdf.format(new Date()))
+                                    .replace("{{code}}", verificationCode)
+                                    .replace("{{facebookIcon}}", facebookURL)
+                                    .replace("{{instagramIcon}}", instagramURL)
+                                    .replace("{{linkedinIcon}}", linkedinURL)
+                                    .replace("{{x-twitterIcon}}", xtwitterURL)
+                                    .replace("{{youtubeIcon}}", youtubeURL);
+
+                            Runnable r = new Runnable() {
+                                @Override
+                                public void run() {
+                                    Mail.sendMail(email, "HireUp - User Verification", filledVerificationEmailTemplate);
+                                }
+                            };
+                            Thread t = new Thread(r);
+                            t.start();
+                        }
+                    } else {
+                        httpSession.setAttribute("user", user);
+
+                        responseObject.addProperty("message", "WVERIFY");
                     }
+
+                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                    cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    cookie.setSecure(true);
+                    response.addCookie(cookie);
+
+                    Cookie cookie1;
+                    if (rememberMe) {
+                        cookie1 = new Cookie("rememberMe", email);
+                        cookie1.setMaxAge(60 * 60 * 24 * 7);
+                        cookie1.setHttpOnly(true);
+                        cookie1.setPath("/");
+                        cookie1.setSecure(true);
+                        response.addCookie(cookie1);
+                    } else {
+                        cookie1 = new Cookie("rememberMe", "");
+                        cookie1.setMaxAge(0);
+                        cookie1.setPath("/");
+                        response.addCookie(cookie1);
+                    }
+
                 } else {
-                    httpSession.setAttribute("user", user);
-
-                    responseObject.addProperty("message", "WVERIFY");
+                    responseObject.addProperty("message", "Invalid Credentials!");
                 }
-
-                Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                cookie.setHttpOnly(true);
-                cookie.setPath("/");
-                cookie.setSecure(true);
-                response.addCookie(cookie);
-
-                Cookie cookie1;
-                if (rememberMe) {
-                    cookie1 = new Cookie("rememberMe", email);
-                    cookie1.setMaxAge(60 * 60 * 24 * 7);
-                    cookie1.setHttpOnly(true);
-                    cookie1.setPath("/");
-                    cookie1.setSecure(true);
-                    response.addCookie(cookie1);
-                } else {
-                    cookie1 = new Cookie("rememberMe", "");
-                    cookie1.setMaxAge(0);
-                    cookie1.setPath("/");
-                    response.addCookie(cookie1);
-                }
-
             }
 
             session.close();

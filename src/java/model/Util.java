@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  *
@@ -68,5 +69,10 @@ public class Util {
     // Validate Postal Code
     public static boolean isPostalCodeValid(String code) {
         return code.matches("^\\d{5}$");
+    }
+    
+    // Encrypt a Password
+    public static String encryptPassword(String password) {
+        return BCrypt.hashpw(password, BCrypt.gensalt(12));
     }
 }

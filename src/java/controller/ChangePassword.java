@@ -64,7 +64,9 @@ public class ChangePassword extends HttpServlet {
 
                 if (!criteria.list().isEmpty()) {
                     User u = (User) criteria.list().get(0);
-                    u.setPassword(newPassword);
+
+                    String encryptPassword = Util.encryptPassword(newPassword);
+                    u.setPassword(encryptPassword);
 
                     httpSession.setAttribute("user", u);
                     Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());

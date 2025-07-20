@@ -6,8 +6,6 @@ package controller;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import entity.User;
-import hibernate.HibernateUtil;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,9 +13,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 
 /**
  *
@@ -37,22 +32,9 @@ public class RememberMe extends HttpServlet {
             for (Cookie cookie : cookies) {
                 if (cookie.getName().equals("rememberMe")) {
                     String email = cookie.getValue();
-
-                    Session session = HibernateUtil.getSessionFactory().openSession();
-
-                    Criteria criteria = session.createCriteria(User.class);
-                    criteria.add(Restrictions.eq("email", email));
-
-                    if (!criteria.list().isEmpty()) {
-                        User user = (User) criteria.list().get(0);
-                        String password = user.getPassword();
-
-                        responseObject.addProperty("email", email);
-                        responseObject.addProperty("password", password);
-
-                        responseObject.addProperty("status", true);
-                    }
-
+                    responseObject.addProperty("email", email);
+                    
+                    responseObject.addProperty("status", true);
                     break;
                 }
             }

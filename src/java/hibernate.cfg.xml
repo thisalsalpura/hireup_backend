@@ -16,5 +16,6 @@
         <mapping class="entity.User_Type" />
         <mapping class="entity.Locale" />
         <mapping class="entity.User" />
+        <mapping class="entity.Subscribers" />
     </session-factory>
 </hibernate-configuration>
