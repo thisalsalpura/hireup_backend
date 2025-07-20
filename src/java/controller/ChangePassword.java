@@ -56,7 +56,7 @@ public class ChangePassword extends HttpServlet {
 
             HttpSession httpSession = request.getSession(false);
 
-            if ((httpSession != null) && (httpSession.getAttribute("user") != null)) {
+            if (httpSession != null && httpSession.getAttribute("user") != null) {
                 User user = (User) httpSession.getAttribute("user");
 
                 Criteria criteria = session.createCriteria(User.class);

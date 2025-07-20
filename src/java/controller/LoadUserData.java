@@ -30,7 +30,7 @@ public class LoadUserData extends HttpServlet {
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
 
-        if ((httpSession != null) && (httpSession.getAttribute("user") != null)) {
+        if (httpSession != null && httpSession.getAttribute("user") != null) {
             User user = (User) httpSession.getAttribute("user");
 
             responseObject.addProperty("status", true);

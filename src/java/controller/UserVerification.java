@@ -42,7 +42,7 @@ public class UserVerification extends HttpServlet {
         } else {
             HttpSession httpSession = request.getSession(false);
 
-            if ((httpSession == null) || (httpSession.getAttribute("email") == null)) {
+            if (httpSession == null || httpSession.getAttribute("email") == null) {
                 responseObject.addProperty("message", "ENULL");
             } else {
                 String email = httpSession.getAttribute("email").toString();

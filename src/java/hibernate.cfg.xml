@@ -17,5 +17,7 @@
         <mapping class="entity.Locale" />
         <mapping class="entity.User" />
         <mapping class="entity.Subscribers" />
+        <mapping class="entity.Seller_Status" />
+        <mapping class="entity.User_As_Seller" />
     </session-factory>
 </hibernate-configuration>

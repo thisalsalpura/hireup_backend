@@ -53,7 +53,7 @@ public class ChangeForgotPassword extends HttpServlet {
         } else {
             HttpSession httpSession = request.getSession(false);
 
-            if ((httpSession != null) && (httpSession.getAttribute("email") != null) && (httpSession.getAttribute("verification") != null)) {
+            if (httpSession != null && httpSession.getAttribute("email") != null && httpSession.getAttribute("verification") != null) {
                 if (!fpVerification.equals(httpSession.getAttribute("verification"))) {
                     responseObject.addProperty("message", "Invalid Verification Code!");
                 } else {
