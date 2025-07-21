@@ -158,6 +158,8 @@ public class UserProfileUpdate extends HttpServlet {
                 }
 
                 session.close();
+            } else {
+                responseObject.addProperty("message", "You're Session is Timeout.");
             }
 
         }

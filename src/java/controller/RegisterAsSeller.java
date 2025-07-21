@@ -11,12 +11,16 @@ import entity.User;
 import entity.User_As_Seller;
 import hibernate.HibernateUtil;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import model.Mail;
+import model.Util;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
@@ -77,8 +81,40 @@ public class RegisterAsSeller extends HttpServlet {
                                 session.save(user_As_Seller);
                                 session.beginTransaction().commit();
 
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+                                String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/SellerRegistration.html");
+                                String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
+
+                                String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
+                                String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/facebook.png";
+                                String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/instagram.png";
+                                String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/linkedin.png";
+                                String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/x-twitter.png";
+                                String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/youtube.png";
+
+                                if (!verificationEmailTemplate.isEmpty()) {
+                                    String filledVerificationEmailTemplate = verificationEmailTemplate
+                                            .replace("{{logo}}", logoURL)
+                                            .replace("{{date}}", sdf.format(new Date()))
+                                            .replace("{{facebookIcon}}", facebookURL)
+                                            .replace("{{instagramIcon}}", instagramURL)
+                                            .replace("{{linkedinIcon}}", linkedinURL)
+                                            .replace("{{x-twitterIcon}}", xtwitterURL)
+                                            .replace("{{youtubeIcon}}", youtubeURL);
+
+                                    Runnable r = new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Mail.sendMail(email, "HireUp - Seller Registration", filledVerificationEmailTemplate);
+                                        }
+                                    };
+                                    Thread t = new Thread(r);
+                                    t.start();
+                                }
+
                                 responseObject.addProperty("status", true);
-                                responseObject.addProperty("message", "Seller registration Successfull! Still registration is in Pending Status. Comes a Email, after approve it");
+                                responseObject.addProperty("message", "Seller registration Successfull! Still registration is in Pending Status. After approve it, received a Email to inform it.");
                             }
                         } else {
                             responseObject.addProperty("message", "You're already registered as Seller!");

@@ -19,5 +19,6 @@
         <mapping class="entity.Subscribers" />
         <mapping class="entity.Seller_Status" />
         <mapping class="entity.User_As_Seller" />
+        <mapping class="entity.Admin" />
     </session-factory>
 </hibernate-configuration>

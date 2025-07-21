@@ -81,6 +81,8 @@ public class ChangePassword extends HttpServlet {
                     responseObject.addProperty("status", true);
                     responseObject.addProperty("message", "User password updated Successfully!");
                 }
+            } else {
+                responseObject.addProperty("message", "You're Session is Timeout.");
             }
 
             session.close();

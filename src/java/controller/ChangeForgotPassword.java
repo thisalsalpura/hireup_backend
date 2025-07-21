@@ -83,7 +83,7 @@ public class ChangeForgotPassword extends HttpServlet {
                     session.close();
                 }
             } else {
-                responseObject.addProperty("message", "Something went wrong! Please try again later.");
+                responseObject.addProperty("message", "You're Session is Timeout.");
             }
         }
 
