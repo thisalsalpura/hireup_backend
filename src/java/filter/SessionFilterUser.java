@@ -22,8 +22,8 @@ import javax.servlet.http.HttpSession;
  *
  * @author User
  */
-@WebFilter(urlPatterns = {"/SessionServlet"})
-public class SessionFilter implements Filter {
+@WebFilter(urlPatterns = {"/SessionServletUser"})
+public class SessionFilterUser implements Filter {
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {

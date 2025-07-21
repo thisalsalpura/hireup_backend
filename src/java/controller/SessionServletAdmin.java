@@ -15,11 +15,11 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author User
  */
-@WebServlet(name = "SessionServlet", urlPatterns = {"/SessionServlet"})
-public class SessionServlet extends HttpServlet {
+@WebServlet(name = "SessionServletAdmin", urlPatterns = {"/SessionServletAdmin"})
+public class SessionServletAdmin extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Servlet for SessionFilter
+        // Servlet for SessionFilterAdmin
     }
 }
