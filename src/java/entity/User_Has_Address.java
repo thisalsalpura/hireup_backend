@@ -41,6 +41,9 @@ public class User_Has_Address implements Serializable {
     @Column(name = "postal_code", length = 5, nullable = false)
     private String postal_code;
 
+    public User_Has_Address() {
+    }
+
     public int getId() {
         return id;
     }

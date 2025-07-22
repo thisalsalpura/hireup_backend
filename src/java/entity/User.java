@@ -66,6 +66,9 @@ public class User implements Serializable {
     @JoinColumn(name = "user_has_address_id", nullable = true)
     private User_Has_Address user_Has_Address;
 
+    public User() {
+    }
+
     public int getId() {
         return id;
     }

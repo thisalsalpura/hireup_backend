@@ -10,6 +10,7 @@ import entity.Seller_Status;
 import entity.User_As_Seller;
 import hibernate.HibernateUtil;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -32,6 +33,8 @@ public class LoadPendingSellers extends HttpServlet {
         Gson gson = new Gson();
         JsonObject responseObject = new JsonObject();
 
+        responseObject.addProperty("status", false);
+
         Session session = HibernateUtil.getSessionFactory().openSession();
 
         Criteria criteria = session.createCriteria(Seller_Status.class);
@@ -44,25 +47,32 @@ public class LoadPendingSellers extends HttpServlet {
             Criteria criteria1 = session.createCriteria(User_As_Seller.class);
             criteria1.add(Restrictions.eq("seller_Status", status));
 
-            List<User_As_Seller> sellersList;
+            
             if (!criteria1.list().isEmpty()) {
-                sellersList = criteria1.list();
+                List<User_As_Seller> sellersList = criteria1.list();
+                List<User_As_Seller> activeSellersList = new ArrayList<>();
 
                 for (User_As_Seller user_As_Seller : sellersList) {
-                    user_As_Seller.getUser().setPassword(null);
-                    user_As_Seller.getUser().setDob(null);
-                    user_As_Seller.getUser().setJoined_date(null);
-                    user_As_Seller.getUser().setVerification(null);
-                    user_As_Seller.getUser().setUser_Type(null);
-                    user_As_Seller.getUser().setUser_Has_Address(null);
-                    user_As_Seller.getUser().setLocale(null);
+                    if (user_As_Seller.getUser().getUser_Status().getValue().equals("Active") && user_As_Seller.getUser().getVerification().equals("VERIFIED!")) {
+                        user_As_Seller.getUser().setId(-1);
+                        user_As_Seller.getUser().setPassword(null);
+                        user_As_Seller.getUser().setDob(null);
+                        user_As_Seller.getUser().setJoined_date(null);
+                        user_As_Seller.getUser().setVerification(null);
+                        user_As_Seller.getUser().setUser_Type(null);
+                        user_As_Seller.getUser().setUser_Has_Address(null);
+                        user_As_Seller.getUser().setLocale(null);
+                        activeSellersList.add(user_As_Seller);
+                    }
                 }
 
                 responseObject.addProperty("status", true);
-                responseObject.add("sellerList", gson.toJsonTree(sellersList));
+                responseObject.add("sellerList", gson.toJsonTree(activeSellersList));
+            } else {
+                responseObject.addProperty("message", "EMPTY");
             }
         }
-        
+
         session.close();
 
         String responseText = gson.toJson(responseObject);

@@ -29,6 +29,9 @@ public class User_Type implements Serializable {
     @Column(name = "value", length = 10, nullable = false)
     private String value;
 
+    public User_Type() {
+    }
+
     public int getId() {
         return id;
     }

@@ -32,12 +32,17 @@ public class SwitchToSeller extends HttpServlet {
 
         if (httpSession != null && httpSession.getAttribute("user") != null) {
             User user = (User) httpSession.getAttribute("user");
-            User_Type type = user.getUser_Type();
 
-            if (type.getValue().equals("Buyer")) {
-                responseObject.addProperty("message", "BUYER");
-            } else if (type.getValue().equals("Seller")) {
-                responseObject.addProperty("message", "SELLER");
+            if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!")) {
+                User_Type type = user.getUser_Type();
+
+                if (type.getValue().equals("Buyer")) {
+                    responseObject.addProperty("message", "BUYER");
+                } else if (type.getValue().equals("Seller")) {
+                    responseObject.addProperty("message", "SELLER");
+                }
+            } else {
+                responseObject.addProperty("message", "You're Inactive or Unverified User!");
             }
         } else {
             responseObject.addProperty("message", "NSESSION");

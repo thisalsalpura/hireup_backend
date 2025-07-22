@@ -50,52 +50,58 @@ public class ForgotPassword extends HttpServlet {
             criteria.add(Restrictions.eq("email", email));
 
             if (!criteria.list().isEmpty()) {
-                final String verificationCode = Util.generateVerificationCode(session);
+                User user = (User) criteria.list().get(0);
 
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                if (user.getUser_Status().getValue().equals("Active")) {
+                    final String verificationCode = Util.generateVerificationCode(session);
 
-                String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/ForgotPasswordVerification.html");
-                String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
-                String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/facebook.png";
-                String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/instagram.png";
-                String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/linkedin.png";
-                String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/x-twitter.png";
-                String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/youtube.png";
+                    String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/ForgotPasswordVerification.html");
+                    String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
 
-                if (!verificationEmailTemplate.isEmpty()) {
-                    String filledVerificationEmailTemplate = verificationEmailTemplate
-                            .replace("{{logo}}", logoURL)
-                            .replace("{{date}}", sdf.format(new Date()))
-                            .replace("{{code}}", verificationCode)
-                            .replace("{{facebookIcon}}", facebookURL)
-                            .replace("{{instagramIcon}}", instagramURL)
-                            .replace("{{linkedinIcon}}", linkedinURL)
-                            .replace("{{x-twitterIcon}}", xtwitterURL)
-                            .replace("{{youtubeIcon}}", youtubeURL);
+                    String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
+                    String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/facebook.png";
+                    String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/instagram.png";
+                    String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/linkedin.png";
+                    String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/x-twitter.png";
+                    String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/youtube.png";
 
-                    Runnable r = new Runnable() {
-                        @Override
-                        public void run() {
-                            Mail.sendMail(email, "HireUp - Forgot Password Verification", filledVerificationEmailTemplate);
-                        }
-                    };
-                    Thread t = new Thread(r);
-                    t.start();
+                    if (!verificationEmailTemplate.isEmpty()) {
+                        String filledVerificationEmailTemplate = verificationEmailTemplate
+                                .replace("{{logo}}", logoURL)
+                                .replace("{{date}}", sdf.format(new Date()))
+                                .replace("{{code}}", verificationCode)
+                                .replace("{{facebookIcon}}", facebookURL)
+                                .replace("{{instagramIcon}}", instagramURL)
+                                .replace("{{linkedinIcon}}", linkedinURL)
+                                .replace("{{x-twitterIcon}}", xtwitterURL)
+                                .replace("{{youtubeIcon}}", youtubeURL);
+
+                        Runnable r = new Runnable() {
+                            @Override
+                            public void run() {
+                                Mail.sendMail(email, "HireUp - Forgot Password Verification", filledVerificationEmailTemplate);
+                            }
+                        };
+                        Thread t = new Thread(r);
+                        t.start();
+                    }
+
+                    HttpSession httpSession = request.getSession();
+                    httpSession.setAttribute("email", email);
+                    httpSession.setAttribute("verification", verificationCode);
+                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                    cookie.setHttpOnly(true);
+                    cookie.setPath("/");
+                    cookie.setSecure(true);
+                    response.addCookie(cookie);
+
+                    responseObject.addProperty("status", true);
+                    responseObject.addProperty("message", "Please check your Email Address for the Verification.");
+                } else {
+                    responseObject.addProperty("message", "Admin change your Status as a Inactive!");
                 }
-
-                HttpSession httpSession = request.getSession();
-                httpSession.setAttribute("email", email);
-                httpSession.setAttribute("verification", verificationCode);
-                Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                cookie.setHttpOnly(true);
-                cookie.setPath("/");
-                cookie.setSecure(true);
-                response.addCookie(cookie);
-
-                responseObject.addProperty("status", true);
-                responseObject.addProperty("message", "Please check your Email Address for the Verification.");
             } else {
                 responseObject.addProperty("message", "Invalid Email Address!");
             }

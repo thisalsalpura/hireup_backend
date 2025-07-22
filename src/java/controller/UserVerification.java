@@ -57,20 +57,25 @@ public class UserVerification extends HttpServlet {
                     responseObject.addProperty("message", "Invalid Verification Code!");
                 } else {
                     User user = (User) criteria.list().get(0);
-                    user.setVerification("VERIFIED!");
 
-                    session.update(user);
-                    session.beginTransaction().commit();
+                    if (user.getUser_Status().getValue().equals("Active")) {
+                        user.setVerification("VERIFIED!");
 
-                    httpSession.setAttribute("user", user);
-                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    cookie.setSecure(true);
-                    response.addCookie(cookie);
+                        session.update(user);
+                        session.beginTransaction().commit();
 
-                    responseObject.addProperty("status", true);
-                    responseObject.addProperty("message", "User verification Successful!");
+                        httpSession.setAttribute("user", user);
+                        Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                        cookie.setHttpOnly(true);
+                        cookie.setPath("/");
+                        cookie.setSecure(true);
+                        response.addCookie(cookie);
+
+                        responseObject.addProperty("status", true);
+                        responseObject.addProperty("message", "User verification Successful!");
+                    } else {
+                        responseObject.addProperty("message", "Admin change your Status as a Inactive!");
+                    }
                 }
 
                 session.close();

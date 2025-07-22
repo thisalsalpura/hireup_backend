@@ -35,6 +35,9 @@ public class City implements Serializable {
     @JoinColumn(name = "country_id", nullable = false)
     private Country country;
 
+    public City() {
+    }
+
     public int getId() {
         return id;
     }

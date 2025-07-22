@@ -33,30 +33,32 @@ public class LoadUserData extends HttpServlet {
         if (httpSession != null && httpSession.getAttribute("user") != null) {
             User user = (User) httpSession.getAttribute("user");
 
-            responseObject.addProperty("status", true);
+            if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!")) {
+                responseObject.addProperty("status", true);
 
-            responseObject.addProperty("fname", user.getFname());
-            responseObject.addProperty("lname", user.getLname());
-            responseObject.addProperty("email", user.getEmail());
-            responseObject.addProperty("password", user.getPassword());
+                responseObject.addProperty("fname", user.getFname());
+                responseObject.addProperty("lname", user.getLname());
+                responseObject.addProperty("email", user.getEmail());
+                responseObject.addProperty("password", user.getPassword());
 
-            SimpleDateFormat sdf = new SimpleDateFormat("MMM yyyy");
-            responseObject.addProperty("regDate", sdf.format(user.getJoined_date()));
+                SimpleDateFormat sdf = new SimpleDateFormat("MMM yyyy");
+                responseObject.addProperty("regDate", sdf.format(user.getJoined_date()));
 
-            if (user.getDob() == null || user.getUser_Has_Address() == null || user.getLocale() == null) {
-                responseObject.addProperty("message", "INCOMPLETE");
-            } else {
-                responseObject.addProperty("message", "UPDATED");
+                if (user.getDob() == null || user.getUser_Has_Address() == null || user.getLocale() == null) {
+                    responseObject.addProperty("message", "INCOMPLETE");
+                } else {
+                    responseObject.addProperty("message", "UPDATED");
 
-                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd");
-                responseObject.addProperty("dob", sdf1.format(user.getDob()));
+                    SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd");
+                    responseObject.addProperty("dob", sdf1.format(user.getDob()));
 
-                responseObject.addProperty("line1", user.getUser_Has_Address().getLine_1());
-                responseObject.addProperty("line2", user.getUser_Has_Address().getLine_2());
-                responseObject.addProperty("pcode", user.getUser_Has_Address().getPostal_code());
-                responseObject.addProperty("countryId", user.getUser_Has_Address().getCity().getCountry().getId());
-                responseObject.addProperty("cityId", user.getUser_Has_Address().getCity().getId());
-                responseObject.addProperty("localeId", user.getLocale().getId());
+                    responseObject.addProperty("line1", user.getUser_Has_Address().getLine_1());
+                    responseObject.addProperty("line2", user.getUser_Has_Address().getLine_2());
+                    responseObject.addProperty("pcode", user.getUser_Has_Address().getPostal_code());
+                    responseObject.addProperty("countryId", user.getUser_Has_Address().getCity().getCountry().getId());
+                    responseObject.addProperty("cityId", user.getUser_Has_Address().getCity().getId());
+                    responseObject.addProperty("localeId", user.getLocale().getId());
+                }
             }
         }
 

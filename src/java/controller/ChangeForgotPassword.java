@@ -11,7 +11,6 @@ import hibernate.HibernateUtil;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -65,19 +64,18 @@ public class ChangeForgotPassword extends HttpServlet {
                     if (!criteria.list().isEmpty()) {
                         User user = (User) criteria.list().get(0);
 
-                        String encryptPassword = Util.encryptPassword(newPassword);
-                        user.setPassword(encryptPassword);
+                        if (user.getUser_Status().getValue().equals("Active")) {
+                            String encryptPassword = Util.encryptPassword(newPassword);
+                            user.setPassword(encryptPassword);
 
-                        session.merge(user);
-                        session.beginTransaction().commit();
+                            session.merge(user);
+                            session.beginTransaction().commit();
 
-                        Cookie cookie = new Cookie("rememberMe", "");
-                        cookie.setMaxAge(0);
-                        cookie.setPath("/");
-                        response.addCookie(cookie);
-
-                        responseObject.addProperty("status", true);
-                        responseObject.addProperty("message", "User password updated Successfully!");
+                            responseObject.addProperty("status", true);
+                            responseObject.addProperty("message", "User password updated Successfully!");
+                        } else {
+                            responseObject.addProperty("message", "Admin change your Status as a Inactive!");
+                        }
                     }
 
                     session.close();

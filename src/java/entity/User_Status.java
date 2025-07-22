@@ -29,6 +29,9 @@ public class User_Status implements Serializable {
     @Column(name = "value", length = 10, nullable = false)
     private String value;
 
+    public User_Status() {
+    }
+
     public int getId() {
         return id;
     }

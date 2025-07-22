@@ -34,6 +34,9 @@ public class Locale implements Serializable {
     @JoinColumn(name = "country_id", nullable = false)
     private Country country;
 
+    public Locale() {
+    }
+
     public int getId() {
         return id;
     }

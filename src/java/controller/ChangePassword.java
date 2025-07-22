@@ -65,21 +65,25 @@ public class ChangePassword extends HttpServlet {
                 if (!criteria.list().isEmpty()) {
                     User u = (User) criteria.list().get(0);
 
-                    String encryptPassword = Util.encryptPassword(newPassword);
-                    u.setPassword(encryptPassword);
+                    if (u.getUser_Status().getValue().equals("Active") && u.getVerification().equals("VERIFIED!")) {
+                        String encryptPassword = Util.encryptPassword(newPassword);
+                        u.setPassword(encryptPassword);
 
-                    httpSession.setAttribute("user", u);
-                    Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                    cookie.setHttpOnly(true);
-                    cookie.setPath("/");
-                    cookie.setSecure(true);
-                    response.addCookie(cookie);
+                        httpSession.setAttribute("user", u);
+                        Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                        cookie.setHttpOnly(true);
+                        cookie.setPath("/");
+                        cookie.setSecure(true);
+                        response.addCookie(cookie);
 
-                    session.merge(u);
-                    session.beginTransaction().commit();
+                        session.merge(u);
+                        session.beginTransaction().commit();
 
-                    responseObject.addProperty("status", true);
-                    responseObject.addProperty("message", "User password updated Successfully!");
+                        responseObject.addProperty("status", true);
+                        responseObject.addProperty("message", "User password updated Successfully!");
+                    } else {
+                        responseObject.addProperty("message", "You're Inactive or Unverified User!");
+                    }
                 }
             } else {
                 responseObject.addProperty("message", "You're Session is Timeout.");

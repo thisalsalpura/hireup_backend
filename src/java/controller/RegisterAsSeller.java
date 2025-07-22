@@ -67,57 +67,61 @@ public class RegisterAsSeller extends HttpServlet {
                         Criteria criteria1 = session.createCriteria(User_As_Seller.class);
                         criteria1.add(Restrictions.eq("user", u));
 
-                        if (criteria1.list().isEmpty()) {
-                            Criteria criteria2 = session.createCriteria(Seller_Status.class);
-                            criteria2.add(Restrictions.eq("value", "Pending"));
+                        if (u.getUser_Status().getValue().equals("Active") && u.getVerification().equals("VERIFIED!")) {
+                            if (criteria1.list().isEmpty()) {
+                                Criteria criteria2 = session.createCriteria(Seller_Status.class);
+                                criteria2.add(Restrictions.eq("value", "Pending"));
 
-                            if (!criteria2.list().isEmpty()) {
-                                Seller_Status seller_Status = (Seller_Status) criteria2.list().get(0);
+                                if (!criteria2.list().isEmpty()) {
+                                    Seller_Status seller_Status = (Seller_Status) criteria2.list().get(0);
 
-                                User_As_Seller user_As_Seller = new User_As_Seller();
-                                user_As_Seller.setUser(u);
-                                user_As_Seller.setSeller_Status(seller_Status);
+                                    User_As_Seller user_As_Seller = new User_As_Seller();
+                                    user_As_Seller.setUser(u);
+                                    user_As_Seller.setSeller_Status(seller_Status);
 
-                                session.save(user_As_Seller);
-                                session.beginTransaction().commit();
+                                    session.save(user_As_Seller);
+                                    session.beginTransaction().commit();
 
-                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 
-                                String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/SellerRegistration.html");
-                                String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
+                                    String verificationEmailTemplatePath = getServletContext().getRealPath("/assets/templates/emails/SellerRegistration.html");
+                                    String verificationEmailTemplate = Util.loadEmailTemplate(verificationEmailTemplatePath);
 
-                                String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
-                                String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/facebook.png";
-                                String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/instagram.png";
-                                String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/linkedin.png";
-                                String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/x-twitter.png";
-                                String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/youtube.png";
+                                    String logoURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/logo.png";
+                                    String facebookURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/facebook.png";
+                                    String instagramURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/instagram.png";
+                                    String linkedinURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/linkedin.png";
+                                    String xtwitterURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/x-twitter.png";
+                                    String youtubeURL = "https://raw.githubusercontent.com/thisalsalpura/hireup_backend/master/web/assets/icons/youtube.png";
 
-                                if (!verificationEmailTemplate.isEmpty()) {
-                                    String filledVerificationEmailTemplate = verificationEmailTemplate
-                                            .replace("{{logo}}", logoURL)
-                                            .replace("{{date}}", sdf.format(new Date()))
-                                            .replace("{{facebookIcon}}", facebookURL)
-                                            .replace("{{instagramIcon}}", instagramURL)
-                                            .replace("{{linkedinIcon}}", linkedinURL)
-                                            .replace("{{x-twitterIcon}}", xtwitterURL)
-                                            .replace("{{youtubeIcon}}", youtubeURL);
+                                    if (!verificationEmailTemplate.isEmpty()) {
+                                        String filledVerificationEmailTemplate = verificationEmailTemplate
+                                                .replace("{{logo}}", logoURL)
+                                                .replace("{{date}}", sdf.format(new Date()))
+                                                .replace("{{facebookIcon}}", facebookURL)
+                                                .replace("{{instagramIcon}}", instagramURL)
+                                                .replace("{{linkedinIcon}}", linkedinURL)
+                                                .replace("{{x-twitterIcon}}", xtwitterURL)
+                                                .replace("{{youtubeIcon}}", youtubeURL);
 
-                                    Runnable r = new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            Mail.sendMail(email, "HireUp - Seller Registration", filledVerificationEmailTemplate);
-                                        }
-                                    };
-                                    Thread t = new Thread(r);
-                                    t.start();
+                                        Runnable r = new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Mail.sendMail(email, "HireUp - Seller Registration", filledVerificationEmailTemplate);
+                                            }
+                                        };
+                                        Thread t = new Thread(r);
+                                        t.start();
+                                    }
+
+                                    responseObject.addProperty("status", true);
+                                    responseObject.addProperty("message", "Seller registration Successfull! Still registration is in Pending Status. After approve it, received a Email to inform it.");
                                 }
-
-                                responseObject.addProperty("status", true);
-                                responseObject.addProperty("message", "Seller registration Successfull! Still registration is in Pending Status. After approve it, received a Email to inform it.");
+                            } else {
+                                responseObject.addProperty("message", "You're already registered as Seller!");
                             }
                         } else {
-                            responseObject.addProperty("message", "You're already registered as Seller!");
+                            responseObject.addProperty("message", "You're Inactive or Unverified User!");
                         }
                     } else {
                         responseObject.addProperty("message", "Invalid Credentials!");

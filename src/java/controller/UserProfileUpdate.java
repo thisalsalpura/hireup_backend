@@ -79,85 +79,90 @@ public class UserProfileUpdate extends HttpServlet {
             if (httpSession != null && httpSession.getAttribute("user") != null) {
                 User user = (User) httpSession.getAttribute("user");
 
-                Session session = HibernateUtil.getSessionFactory().openSession();
+                if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!")) {
+                    Session session = HibernateUtil.getSessionFactory().openSession();
 
-                Criteria criteria = session.createCriteria(Locale.class);
-                criteria.add(Restrictions.eq("id", localeId));
+                    Criteria criteria = session.createCriteria(Locale.class);
+                    criteria.add(Restrictions.eq("id", localeId));
 
-                Locale locale = null;
+                    Locale locale = null;
 
-                if (!criteria.list().isEmpty()) {
-                    locale = (Locale) criteria.list().get(0);
-                }
-
-                Criteria criteria1 = session.createCriteria(City.class);
-                criteria1.add(Restrictions.eq("id", cityId));
-
-                City city = null;
-
-                if (!criteria1.list().isEmpty()) {
-                    city = (City) criteria1.list().get(0);
-                }
-
-                Criteria criteria2 = session.createCriteria(User.class);
-                criteria2.add(Restrictions.eq("email", user.getEmail()));
-
-                if (!criteria2.list().isEmpty()) {
-                    responseObject.addProperty("status", true);
-
-                    User u = (User) criteria2.list().get(0);
-                    u.setFname(fname);
-                    u.setLname(lname);
-
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                    Date dob = null;
-                    try {
-                        dob = sdf.parse(dobStr);
-                    } catch (ParseException ex) {
-                        ex.printStackTrace();
+                    if (!criteria.list().isEmpty()) {
+                        locale = (Locale) criteria.list().get(0);
                     }
 
-                    if (dob.before(new Date())) {
-                        u.setDob(dob);
+                    Criteria criteria1 = session.createCriteria(City.class);
+                    criteria1.add(Restrictions.eq("id", cityId));
 
-                        User_Has_Address user_has_address;
-                        if (u.getUser_Has_Address() != null) {
-                            user_has_address = u.getUser_Has_Address();
-                            user_has_address.setLine_1(line1);
-                            user_has_address.setLine_2(line2);
-                            user_has_address.setCity(city);
-                            user_has_address.setPostal_code(pcode);
-                            session.merge(user_has_address);
-                        } else {
-                            user_has_address = new User_Has_Address();
-                            user_has_address.setLine_1(line1);
-                            user_has_address.setLine_2(line2);
-                            user_has_address.setCity(city);
-                            user_has_address.setPostal_code(pcode);
-                            session.save(user_has_address);
+                    City city = null;
+
+                    if (!criteria1.list().isEmpty()) {
+                        city = (City) criteria1.list().get(0);
+                    }
+
+                    Criteria criteria2 = session.createCriteria(User.class);
+                    criteria2.add(Restrictions.eq("email", user.getEmail()));
+
+                    if (!criteria2.list().isEmpty()) {
+                        responseObject.addProperty("status", true);
+
+                        User u = (User) criteria2.list().get(0);
+                        u.setFname(fname);
+                        u.setLname(lname);
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                        Date dob = null;
+                        try {
+                            dob = sdf.parse(dobStr);
+                        } catch (ParseException ex) {
+                            ex.printStackTrace();
                         }
 
-                        u.setUser_Has_Address(user_has_address);
-                        u.setLocale(locale);
+                        if (dob.before(new Date())) {
+                            u.setDob(dob);
 
-                        httpSession.setAttribute("user", u);
-                        Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
-                        cookie.setHttpOnly(true);
-                        cookie.setPath("/");
-                        cookie.setSecure(true);
-                        response.addCookie(cookie);
+                            User_Has_Address user_has_address;
+                            if (u.getUser_Has_Address() != null) {
+                                user_has_address = u.getUser_Has_Address();
+                                user_has_address.setLine_1(line1);
+                                user_has_address.setLine_2(line2);
+                                user_has_address.setCity(city);
+                                user_has_address.setPostal_code(pcode);
+                                session.merge(user_has_address);
+                            } else {
+                                user_has_address = new User_Has_Address();
+                                user_has_address.setLine_1(line1);
+                                user_has_address.setLine_2(line2);
+                                user_has_address.setCity(city);
+                                user_has_address.setPostal_code(pcode);
+                                session.save(user_has_address);
+                            }
 
-                        session.merge(u);
-                        session.beginTransaction().commit();
+                            u.setUser_Has_Address(user_has_address);
+                            u.setLocale(locale);
 
-                        responseObject.addProperty("status", true);
-                        responseObject.addProperty("message", "User profile updated Successfully!");
-                    } else {
-                        responseObject.addProperty("message", "Invalid Date of Birth!");
+                            httpSession.setAttribute("user", u);
+                            Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                            cookie.setHttpOnly(true);
+                            cookie.setPath("/");
+                            cookie.setSecure(true);
+                            response.addCookie(cookie);
+
+                            session.merge(u);
+                            session.beginTransaction().commit();
+
+                            responseObject.addProperty("status", true);
+                            responseObject.addProperty("message", "User profile updated Successfully!");
+                        } else {
+                            responseObject.addProperty("message", "Invalid Date of Birth!");
+                        }
                     }
+
+                    session.close();
+                } else {
+                    responseObject.addProperty("message", "You're Inactive or Unverified User!");
                 }
 
-                session.close();
             } else {
                 responseObject.addProperty("message", "You're Session is Timeout.");
             }

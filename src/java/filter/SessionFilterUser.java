@@ -6,6 +6,7 @@ package filter;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import entity.User;
 import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -53,7 +54,13 @@ public class SessionFilterUser implements Filter {
         JsonObject responseObject = new JsonObject();
 
         if (httpSession != null && httpSession.getAttribute("user") != null) {
-            responseObject.addProperty("redirect", "YES");
+            User user = (User) httpSession.getAttribute("user");
+
+            if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!")) {
+                responseObject.addProperty("redirect", "YES");
+            } else {
+                responseObject.addProperty("redirect", "NO");
+            }
         } else {
             responseObject.addProperty("redirect", "NO");
         }
