@@ -109,13 +109,13 @@ public class SaveGig extends HttpServlet {
                 responseObject.addProperty("message", "Please enter your Bronze Gig Price!");
             } else if (!Util.isDouble(bronzePrice)) {
                 responseObject.addProperty("message", "Invalid Bronze Gig Price!");
-            } else if (Double.parseDouble(bronzePrice) < 0) {
+            } else if (Double.parseDouble(bronzePrice) <= 0) {
                 responseObject.addProperty("message", "Invalid Bronze Gig Price!");
             } else if (bronzeDTime.isEmpty()) {
                 responseObject.addProperty("message", "Please enter your Bronze Gig Delivery Time!");
             } else if (!Util.isInteger(bronzeDTime)) {
                 responseObject.addProperty("message", "Invalid Bronze Gig Delivery Time!");
-            } else if (Integer.parseInt(bronzeDTime) < 0) {
+            } else if (Integer.parseInt(bronzeDTime) <= 0) {
                 responseObject.addProperty("message", "Invalid Bronze Gig Delivery Time!");
             } else if (bronzeNote.isEmpty()) {
                 responseObject.addProperty("message", "Please enter your Bronze Gig Special Note!");
@@ -123,13 +123,13 @@ public class SaveGig extends HttpServlet {
                 responseObject.addProperty("message", "Please enter your Silver Gig Price!");
             } else if (!Util.isDouble(silverPrice)) {
                 responseObject.addProperty("message", "Invalid Silver Gig Price!");
-            } else if (Double.parseDouble(silverPrice) < 0) {
+            } else if (Double.parseDouble(silverPrice) <= 0) {
                 responseObject.addProperty("message", "Invalid Silver Gig Price!");
             } else if (silverDTime.isEmpty()) {
                 responseObject.addProperty("message", "Please enter your Silver Gig Delivery Time!");
             } else if (!Util.isInteger(silverDTime)) {
                 responseObject.addProperty("message", "Invalid Silver Gig Delivery Time!");
-            } else if (Integer.parseInt(silverDTime) < 0) {
+            } else if (Integer.parseInt(silverDTime) <= 0) {
                 responseObject.addProperty("message", "Invalid Silver Gig Delivery Time!");
             } else if (silverNote.isEmpty()) {
                 responseObject.addProperty("message", "Please enter your Silver Gig Special Note!");
@@ -137,13 +137,13 @@ public class SaveGig extends HttpServlet {
                 responseObject.addProperty("message", "Please enter your Gold Gig Price!");
             } else if (!Util.isDouble(goldPrice)) {
                 responseObject.addProperty("message", "Invalid Gold Gig Price!");
-            } else if (Double.parseDouble(goldPrice) < 0) {
+            } else if (Double.parseDouble(goldPrice) <= 0) {
                 responseObject.addProperty("message", "Invalid Gold Gig Price!");
             } else if (goldDTime.isEmpty()) {
                 responseObject.addProperty("message", "Please enter your Gold Gig Delivery Time!");
             } else if (!Util.isInteger(goldDTime)) {
                 responseObject.addProperty("message", "Invalid Gold Gig Delivery Time!");
-            } else if (Integer.parseInt(goldDTime) < 0) {
+            } else if (Integer.parseInt(goldDTime) <= 0) {
                 responseObject.addProperty("message", "Invalid Gold Gig Delivery Time!");
             } else if (goldNote.isEmpty()) {
                 responseObject.addProperty("message", "Please enter your Gold Gig Special Note!");

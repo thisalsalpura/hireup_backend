@@ -23,8 +23,8 @@ import org.hibernate.Session;
  *
  * @author User
  */
-@WebServlet(name = "LoadProductDropdowns", urlPatterns = {"/LoadProductDropdowns"})
-public class LoadProductDropdowns extends HttpServlet {
+@WebServlet(name = "LoadGigDropdowns", urlPatterns = {"/LoadGigDropdowns"})
+public class LoadGigDropdowns extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
