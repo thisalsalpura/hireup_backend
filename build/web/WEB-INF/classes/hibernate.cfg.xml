@@ -20,5 +20,11 @@
         <mapping class="entity.Seller_Status" />
         <mapping class="entity.User_As_Seller" />
         <mapping class="entity.Admin" />
+        <mapping class="entity.Category" />
+        <mapping class="entity.Sub_Category" />
+        <mapping class="entity.Gig_Status" />
+        <mapping class="entity.Gig" />
+        <mapping class="entity.Gig_Package_Type" />
+        <mapping class="entity.Gig_Has_Package" />
     </session-factory>
 </hibernate-configuration>

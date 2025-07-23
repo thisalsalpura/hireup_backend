@@ -8,13 +8,18 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import entity.User;
 import entity.User_Type;
+import hibernate.HibernateUtil;
 import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 
 /**
  *
@@ -33,16 +38,32 @@ public class SwitchToSeller extends HttpServlet {
         if (httpSession != null && httpSession.getAttribute("user") != null) {
             User user = (User) httpSession.getAttribute("user");
 
-            if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!")) {
-                User_Type type = user.getUser_Type();
+            Session session = HibernateUtil.getSessionFactory().openSession();
 
-                if (type.getValue().equals("Buyer")) {
-                    responseObject.addProperty("message", "BUYER");
-                } else if (type.getValue().equals("Seller")) {
-                    responseObject.addProperty("message", "SELLER");
+            Criteria criteria = session.createCriteria(User.class);
+            criteria.add(Restrictions.eq("email", user.getEmail()));
+
+            if (!criteria.list().isEmpty()) {
+                User u = (User) criteria.list().get(0);
+
+                if (u.getUser_Status().getValue().equals("Active") && u.getVerification().equals("VERIFIED!")) {
+                    User_Type type = u.getUser_Type();
+
+                    if (type.getValue().equals("Buyer")) {
+                        responseObject.addProperty("message", "BUYER");
+                    } else if (type.getValue().equals("Seller")) {
+                        responseObject.addProperty("message", "SELLER");
+
+                        httpSession.setAttribute("user", u);
+                        Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                        cookie.setHttpOnly(true);
+                        cookie.setPath("/");
+                        cookie.setSecure(true);
+                        response.addCookie(cookie);
+                    }
+                } else {
+                    responseObject.addProperty("message", "You're Inactive or Unverified User!");
                 }
-            } else {
-                responseObject.addProperty("message", "You're Inactive or Unverified User!");
             }
         } else {
             responseObject.addProperty("message", "NSESSION");

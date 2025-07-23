@@ -70,9 +70,19 @@ public class Util {
     public static boolean isPostalCodeValid(String code) {
         return code.matches("^\\d{5}$");
     }
-    
+
     // Encrypt a Password
     public static String encryptPassword(String password) {
         return BCrypt.hashpw(password, BCrypt.gensalt(12));
+    }
+
+    // Check Value is Double
+    public static boolean isDouble(String value) {
+        return value.matches("^\\d+(\\.\\d{2})?$");
+    }
+
+    // Check Value is Integer
+    public static boolean isInteger(String value) {
+        return value.matches("^\\d+$");
     }
 }
