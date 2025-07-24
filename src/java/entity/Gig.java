@@ -29,7 +29,8 @@ public class Gig implements Serializable {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "title", length = 50, nullable = false)
+    @Lob
+    @Column(name = "title", nullable = false)
     private String title;
 
     @Lob

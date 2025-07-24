@@ -28,7 +28,7 @@ public class User_Has_Address implements Serializable {
     @Column(name = "id")
     private int id;
     
-    @Column(name = "line_1", length = 10, nullable = false)
+    @Column(name = "line_1", length = 25, nullable = false)
     private String line_1;
     
     @Column(name = "line_2", length = 45, nullable = false)

@@ -26,5 +26,8 @@
         <mapping class="entity.Gig" />
         <mapping class="entity.Gig_Package_Type" />
         <mapping class="entity.Gig_Has_Package" />
+        <mapping class="entity.Gig_Search_Tag" />
+        <mapping class="entity.Gig_Search_Tag_Has_Gig" />
+        <mapping class="entity.FAQ" />
     </session-factory>
 </hibernate-configuration>

@@ -5,21 +5,39 @@
 package controller;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import entity.FAQ;
 import entity.Gig;
 import entity.Gig_Has_Package;
 import entity.Gig_Package_Type;
+import entity.Gig_Search_Tag_Has_Gig;
+import entity.Gig_Search_Tag;
+import entity.Gig_Status;
 import entity.Sub_Category;
 import entity.User;
 import hibernate.HibernateUtil;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.imageio.ImageIO;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.Part;
 import model.Util;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -29,22 +47,30 @@ import org.hibernate.criterion.Restrictions;
  *
  * @author User
  */
+@MultipartConfig
 @WebServlet(name = "SaveGig", urlPatterns = {"/SaveGig"})
 public class SaveGig extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Gson gson = new Gson();
-        JsonObject jsonObject = gson.fromJson(request.getReader(), JsonObject.class);
+        String contentType = request.getContentType();
+        JsonObject jsonObject = null;
+        int activeStep = 0;
 
-        int activStep = jsonObject.get("activStep").getAsInt();
+        if (contentType != null && contentType.contains("application/json")) {
+            jsonObject = gson.fromJson(request.getReader(), JsonObject.class);
+            activeStep = jsonObject.get("activeStep").getAsInt();
+        } else if (contentType != null && contentType.contains("multipart/form-data")) {
+            activeStep = Integer.parseInt(request.getParameter("activeStep"));
+        }
 
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
 
         HttpSession httpSession = request.getSession(false);
 
-        if (activStep == 1) {
+        if (activeStep == 1) {
             String gigTitle = jsonObject.get("gigTitle").getAsString();
             String gigDesc = jsonObject.get("gigDesc").getAsString();
             int categoryId = jsonObject.get("categoryId").getAsInt();
@@ -94,7 +120,7 @@ public class SaveGig extends HttpServlet {
             }
         }
 
-        if (activStep == 2) {
+        if (activeStep == 2) {
             String bronzePrice = jsonObject.get("bronzePrice").getAsString();
             String bronzeDTime = jsonObject.get("bronzeDTime").getAsString();
             String bronzeNote = jsonObject.get("bronzeNote").getAsString();
@@ -213,6 +239,234 @@ public class SaveGig extends HttpServlet {
                 } else {
                     responseObject.addProperty("message", "You're Session is Timeout.");
                 }
+            }
+        }
+
+        if (activeStep == 3) {
+            JsonArray searchNames = jsonObject.get("searchNamesList").getAsJsonArray();
+            JsonArray faqs = jsonObject.get("faqsList").getAsJsonArray();
+
+            if (httpSession != null && httpSession.getAttribute("user") != null && httpSession.getAttribute("gig") != null && httpSession.getAttribute("bronzePackage") != null && httpSession.getAttribute("silverPackage") != null && httpSession.getAttribute("goldPackage") != null) {
+                User user = (User) httpSession.getAttribute("user");
+
+                if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller")) {
+
+                    if (searchNames.size() == 10) {
+                        List<String> searchNamesList = new ArrayList<>();
+                        for (int i = 0; i < searchNames.size(); i++) {
+                            String searchName = searchNames.get(i).getAsString();
+
+                            if (searchName.isEmpty()) {
+                                responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                return;
+                            } else if (searchName.length() >= 20) {
+                                responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                return;
+                            } else if (!searchName.matches("^[A-Za-z]+$")) {
+                                responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                return;
+                            } else {
+                                searchNamesList.add(searchNames.get(i).getAsString());
+                            }
+                        }
+
+                        if (faqs.size() == 3) {
+                            Map<String, String> faqsMap = new HashMap<>();
+                            for (int i = 0; i < faqs.size(); i++) {
+                                JsonObject faqObj = faqs.get(i).getAsJsonObject();
+                                String question = faqObj.get("question").getAsString();
+                                String answer = faqObj.get("answer").getAsString();
+
+                                if (question.isEmpty() && answer.isEmpty()) {
+                                    responseObject.addProperty("message", "Invalid FAQs!");
+                                    return;
+                                } else {
+                                    faqsMap.put(question, answer);
+                                }
+                            }
+
+                            if (!searchNamesList.isEmpty()) {
+                                if (searchNamesList.size() == 10) {
+                                    if (!faqsMap.isEmpty()) {
+                                        if (faqsMap.size() == 3) {
+                                            httpSession.setAttribute("searchNames", searchNamesList);
+                                            httpSession.setAttribute("faqs", faqsMap);
+
+                                            responseObject.addProperty("status", true);
+                                            responseObject.addProperty("setStep", "4");
+                                        } else {
+                                            responseObject.addProperty("message", "Invalid FAQs!");
+                                        }
+                                    } else {
+                                        responseObject.addProperty("message", "Invalid FAQs!");
+                                    }
+                                } else {
+                                    responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                }
+                            } else {
+                                responseObject.addProperty("message", "Invalid Search Name Tags!");
+                            }
+                        } else {
+                            responseObject.addProperty("message", "Invalid FAQs!");
+                        }
+                    } else {
+                        responseObject.addProperty("message", "Invalid Search Name Tags!");
+                    }
+                } else {
+                    responseObject.addProperty("message", "You're Inactive or Unverified User!");
+                }
+
+            } else {
+                responseObject.addProperty("message", "You're Session is Timeout.");
+            }
+        }
+
+        if (activeStep == 4) {
+            Part part1 = request.getPart("image1");
+            Part part2 = request.getPart("image2");
+            Part part3 = request.getPart("image3");
+            Part part4 = request.getPart("doc");
+
+            if (part1.getSubmittedFileName() == null) {
+                responseObject.addProperty("message", "Gig Image One is Required!");
+            } else if (part2.getSubmittedFileName() == null) {
+                responseObject.addProperty("message", "Gig Image Two is Required!");
+            } else if (part3.getSubmittedFileName() == null) {
+                responseObject.addProperty("message", "Gig Image Three is Required!");
+            } else if (part4.getSubmittedFileName() == null) {
+                responseObject.addProperty("message", "Gig Documentation is Required!");
+            } else {
+
+                if (part1.getContentType().equals("image/png") || part1.getContentType().equals("image/jpeg") || part1.getContentType().equals("image/jpg")) {
+                    if (part2.getContentType().equals("image/png") || part2.getContentType().equals("image/jpeg") || part2.getContentType().equals("image/jpg")) {
+                        if (part3.getContentType().equals("image/png") || part3.getContentType().equals("image/jpeg") || part3.getContentType().equals("image/jpg")) {
+                            if (part4.getContentType().equals("application/pdf")) {
+
+                                if (httpSession != null && httpSession.getAttribute("user") != null && httpSession.getAttribute("gig") != null && httpSession.getAttribute("bronzePackage") != null && httpSession.getAttribute("silverPackage") != null && httpSession.getAttribute("goldPackage") != null && httpSession.getAttribute("searchNames") != null && httpSession.getAttribute("faqs") != null) {
+                                    User user = (User) httpSession.getAttribute("user");
+
+                                    if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller")) {
+
+                                        Session session = HibernateUtil.getSessionFactory().openSession();
+
+                                        Criteria criteria = session.createCriteria(Gig_Status.class);
+                                        criteria.add(Restrictions.eq("value", "Pending"));
+
+                                        if (!criteria.list().isEmpty()) {
+                                            Gig gig = (Gig) httpSession.getAttribute("gig");
+                                            Gig_Status gig_Status = (Gig_Status) criteria.list().get(0);
+
+                                            gig.setCreated_at(new Date());
+                                            gig.setStatus(gig_Status);
+                                            gig.setUser(user);
+
+                                            int gigId = (int) session.save(gig);
+
+                                            Gig_Has_Package bronzePackage = (Gig_Has_Package) httpSession.getAttribute("bronzePackage");
+                                            Gig_Has_Package silverPackage = (Gig_Has_Package) httpSession.getAttribute("silverPackage");
+                                            Gig_Has_Package goldPackage = (Gig_Has_Package) httpSession.getAttribute("goldPackage");
+
+                                            session.save(bronzePackage);
+                                            session.save(silverPackage);
+                                            session.save(goldPackage);
+
+                                            List<String> searchNames = (List<String>) httpSession.getAttribute("searchNames");
+
+                                            for (String searchName : searchNames) {
+                                                Criteria criteria1 = session.createCriteria(Gig_Search_Tag.class);
+                                                criteria1.add(Restrictions.eq("name", searchName));
+                                                Gig_Search_Tag search_Tag;
+                                                if (criteria1.list().isEmpty()) {
+                                                    search_Tag = new Gig_Search_Tag();
+                                                    search_Tag.setName(searchName);
+                                                    session.save(search_Tag);
+                                                } else {
+                                                    search_Tag = (Gig_Search_Tag) criteria1.list().get(0);
+                                                }
+                                                Gig_Search_Tag_Has_Gig gig_Search_Tag_Has_Gig = new Gig_Search_Tag_Has_Gig();
+                                                gig_Search_Tag_Has_Gig.setSearch_Tag(search_Tag);
+                                                gig_Search_Tag_Has_Gig.setGig(gig);
+                                                session.save(gig_Search_Tag_Has_Gig);
+                                            }
+
+                                            Map<String, String> faqs = (Map<String, String>) httpSession.getAttribute("faqs");
+
+                                            for (Map.Entry<String, String> faq : faqs.entrySet()) {
+                                                FAQ faqEntity = new FAQ();
+                                                faqEntity.setQuestion(faq.getKey());
+                                                faqEntity.setAnswer(faq.getValue());
+                                                faqEntity.setGig(gig);
+                                                session.save(faqEntity);
+                                            }
+
+                                            session.beginTransaction().commit();
+
+                                            String appPath = getServletContext().getRealPath("");
+                                            String newPath = appPath.replace("build" + File.separator + "web", "web" + File.separator + "gig-images");
+
+                                            try {
+                                                File gigFolder = new File(newPath, String.valueOf(gigId));
+                                                gigFolder.mkdir();
+
+                                                InputStream imgInputStream1 = part1.getInputStream();
+                                                BufferedImage bufferedImage1 = ImageIO.read(imgInputStream1);
+                                                File file1 = new File(gigFolder, "image1.png");
+                                                ImageIO.write(bufferedImage1, "png", file1);
+
+                                                InputStream imgInputStream2 = part2.getInputStream();
+                                                BufferedImage bufferedImage2 = ImageIO.read(imgInputStream2);
+                                                File file2 = new File(gigFolder, "image2.png");
+                                                ImageIO.write(bufferedImage2, "png", file2);
+
+                                                InputStream imgInputStream3 = part3.getInputStream();
+                                                BufferedImage bufferedImage3 = ImageIO.read(imgInputStream3);
+                                                File file3 = new File(gigFolder, "image3.png");
+                                                ImageIO.write(bufferedImage3, "png", file3);
+
+                                                File file4 = new File(gigFolder, "document.pdf");
+                                                Files.copy(part4.getInputStream(), file4.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                            } catch (IOException e) {
+                                                responseObject.addProperty("message", "Something went wrong!");
+                                            } catch (Exception e) {
+                                                responseObject.addProperty("message", "Something went wrong!");
+                                            }
+
+                                            responseObject.addProperty("status", true);
+                                            responseObject.addProperty("setStep", "FINISH");
+                                            responseObject.addProperty("message", "Gig registerd successfully, but still it in a Pending Status, after admin Verify it, then it inform to you with a Email!");
+
+                                            httpSession.removeAttribute("gig");
+                                            httpSession.removeAttribute("bronzePackage");
+                                            httpSession.removeAttribute("silverPackage");
+                                            httpSession.removeAttribute("goldPackage");
+                                            httpSession.removeAttribute("searchNames");
+                                            httpSession.removeAttribute("faqs");
+                                        } else {
+                                            responseObject.addProperty("message", "Something went wrong!");
+                                        }
+
+                                        session.close();
+
+                                    } else {
+                                        responseObject.addProperty("message", "You're Inactive or Unverified User!");
+                                    }
+                                } else {
+                                    responseObject.addProperty("message", "You're Session is Timeout.");
+                                }
+
+                            } else {
+                                responseObject.addProperty("message", "Invalid Document type!");
+                            }
+                        } else {
+                            responseObject.addProperty("message", "Invalid Image Three type!");
+                        }
+                    } else {
+                        responseObject.addProperty("message", "Invalid Image Two type!");
+                    }
+                } else {
+                    responseObject.addProperty("message", "Invalid Image One type!");
+                }
+
             }
         }
 
