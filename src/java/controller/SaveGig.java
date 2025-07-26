@@ -52,9 +52,16 @@ import org.hibernate.criterion.Restrictions;
 @WebServlet(name = "SaveGig", urlPatterns = {"/SaveGig"})
 public class SaveGig extends HttpServlet {
 
+    private static Gson gson = new Gson();
+
+    private void sendJsonResponse(HttpServletResponse response, JsonObject obj) throws IOException {
+        String responseText = gson.toJson(obj);
+        response.setContentType("application/json");
+        response.getWriter().write(responseText);
+    }
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Gson gson = new Gson();
         String contentType = request.getContentType();
         JsonObject jsonObject = null;
         int activeStep = 0;
@@ -290,12 +297,15 @@ public class SaveGig extends HttpServlet {
 
                                     if (searchName.isEmpty()) {
                                         responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                        sendJsonResponse(response, responseObject);
                                         return;
                                     } else if (searchName.length() >= 20) {
                                         responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                        sendJsonResponse(response, responseObject);
                                         return;
                                     } else if (!searchName.matches("^[A-Za-z]+$")) {
                                         responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                        sendJsonResponse(response, responseObject);
                                         return;
                                     } else {
                                         searchNamesList.add(searchName);
@@ -311,6 +321,7 @@ public class SaveGig extends HttpServlet {
 
                                         if (question.isEmpty() && answer.isEmpty()) {
                                             responseObject.addProperty("message", "Invalid FAQs!");
+                                            sendJsonResponse(response, responseObject);
                                             return;
                                         } else {
                                             faqsMap.put(question, answer);

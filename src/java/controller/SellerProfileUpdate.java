@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,12 +37,19 @@ import org.hibernate.criterion.Restrictions;
 @WebServlet(name = "SellerProfileUpdate", urlPatterns = {"/SellerProfileUpdate"})
 public class SellerProfileUpdate extends HttpServlet {
 
-    private static Map<String, String> qualificationsMap = new HashMap<>();
-    private static List<String> skillsList = new ArrayList<>();
+    private static Gson gson = new Gson();
+
+    private void sendJsonResponse(HttpServletResponse response, JsonObject obj) throws IOException {
+        String responseText = gson.toJson(obj);
+        response.setContentType("application/json");
+        response.getWriter().write(responseText);
+    }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Gson gson = new Gson();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<String, String> qualificationsMap = new HashMap<>();
+        List<String> skillsList = new ArrayList<>();
+
         JsonObject jsonObject = gson.fromJson(request.getReader(), JsonObject.class);
 
         String about = jsonObject.get("about").getAsString();
@@ -76,57 +84,69 @@ public class SellerProfileUpdate extends HttpServlet {
 
                                 if (qualificationName.isEmpty()) {
                                     responseObject.addProperty("message", "Invalid Qualification Names!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
                                 } else if (qualificationName.length() >= 45) {
                                     responseObject.addProperty("message", "Invalid Qualification Names!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
-                                } else if (qualificationName.matches("^[A-Za-z\\s]+$")) {
+                                } else if (!qualificationName.matches("^[A-Za-z\\s]+$")) {
                                     responseObject.addProperty("message", "Invalid Qualification Names!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
                                 } else if (qualificationPlace.isEmpty()) {
                                     responseObject.addProperty("message", "Invalid Qualification Names!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
                                 } else if (qualificationPlace.length() >= 45) {
                                     responseObject.addProperty("message", "Invalid Qualification Names!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
-                                } else if (qualificationPlace.matches("^[A-Za-z\\s]+$")) {
+                                } else if (!qualificationPlace.matches("^[A-Za-z\\s]+$")) {
                                     responseObject.addProperty("message", "Invalid Qualification Names!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
                                 } else {
-                                    SellerProfileUpdate.qualificationsMap.put(qualificationName, qualificationPlace);
+                                    qualificationsMap.put(qualificationName, qualificationPlace);
                                 }
                             }
 
                             if (skills.size() >= 1 && skills.size() <= 10) {
-                                List<String> skillsList = new ArrayList<>();
                                 for (int i = 0; i < skills.size(); i++) {
                                     String skillName = skills.get(i).getAsString();
 
                                     if (skillName.isEmpty()) {
                                         responseObject.addProperty("message", "Invalid Skill Names!");
+                                        sendJsonResponse(response, responseObject);
                                         return;
                                     } else if (skillName.length() >= 45) {
                                         responseObject.addProperty("message", "Invalid Skill Names!");
+                                        sendJsonResponse(response, responseObject);
                                         return;
-                                    } else if (skillName.matches("^[A-Za-z\\s]+$")) {
+                                    } else if (!skillName.matches("^[A-Za-z\\s]+$")) {
                                         responseObject.addProperty("message", "Invalid Skill Names!");
+                                        sendJsonResponse(response, responseObject);
                                         return;
                                     } else {
-                                        SellerProfileUpdate.skillsList.add(skillName);
+                                        skillsList.add(skillName);
                                     }
                                 }
 
-                                if (SellerProfileUpdate.qualificationsMap.isEmpty()) {
-                                    responseObject.addProperty("message", "Invalid Qualification Names!");
+                                if (qualificationsMap.isEmpty()) {
+                                    responseObject.addProperty("message", "Please enter the Qualification Names!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
-                                } else if (SellerProfileUpdate.qualificationsMap.size() >= 1 && SellerProfileUpdate.qualificationsMap.size() <= 2) {
-                                    responseObject.addProperty("message", "Invalid Qualification Names!");
+                                } else if (qualificationsMap.size() < 1 || qualificationsMap.size() > 2) {
+                                    responseObject.addProperty("message", "Invalid Qualification Names Count!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
-                                } else if (SellerProfileUpdate.skillsList.isEmpty()) {
-                                    responseObject.addProperty("message", "Invalid Skill Names!");
+                                } else if (skillsList.isEmpty()) {
+                                    responseObject.addProperty("message", "Please enter the Skill Names!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
-                                } else if (SellerProfileUpdate.skillsList.size() >= 1 && SellerProfileUpdate.skillsList.size() <= 10) {
-                                    responseObject.addProperty("message", "Invalid Skill Names!");
+                                } else if (skillsList.size() < 1 || skillsList.size() > 10) {
+                                    responseObject.addProperty("message", "Invalid Skill Names Count!");
+                                    sendJsonResponse(response, responseObject);
                                     return;
                                 } else {
                                     user_As_Seller.setAbout(about);
@@ -142,7 +162,7 @@ public class SellerProfileUpdate extends HttpServlet {
                                         }
                                     }
 
-                                    for (Map.Entry<String, String> qualification : SellerProfileUpdate.qualificationsMap.entrySet()) {
+                                    for (Map.Entry<String, String> qualification : qualificationsMap.entrySet()) {
                                         Criteria criteria1 = session.createCriteria(Seller_Education.class);
                                         criteria1.add(Restrictions.eq("course_name", qualification.getKey()));
                                         criteria1.add(Restrictions.eq("institute_name", qualification.getValue()));
@@ -160,6 +180,7 @@ public class SellerProfileUpdate extends HttpServlet {
                                         User_As_Seller_Has_Seller_Education user_As_Seller_Has_Seller_Education = new User_As_Seller_Has_Seller_Education();
                                         user_As_Seller_Has_Seller_Education.setUser_As_Seller(user_As_Seller);
                                         user_As_Seller_Has_Seller_Education.setSeller_Education(seller_Education);
+                                        session.save(user_As_Seller_Has_Seller_Education);
                                     }
 
                                     Criteria criteria1 = session.createCriteria(User_As_Seller_Has_Seller_Skills.class);
@@ -172,7 +193,7 @@ public class SellerProfileUpdate extends HttpServlet {
                                         }
                                     }
 
-                                    for (String skill : SellerProfileUpdate.skillsList) {
+                                    for (String skill : skillsList) {
                                         Criteria criteria2 = session.createCriteria(Seller_Skills.class);
                                         criteria2.add(Restrictions.eq("name", skill));
 
@@ -188,21 +209,39 @@ public class SellerProfileUpdate extends HttpServlet {
                                         User_As_Seller_Has_Seller_Skills user_As_Seller_Has_Seller_Skills = new User_As_Seller_Has_Seller_Skills();
                                         user_As_Seller_Has_Seller_Skills.setUser_As_Seller(user_As_Seller);
                                         user_As_Seller_Has_Seller_Skills.setSeller_Skills(seller_Skills);
+                                        session.save(user_As_Seller_Has_Seller_Skills);
                                     }
+
+                                    session.beginTransaction().commit();
 
                                     responseObject.addProperty("status", true);
                                     responseObject.addProperty("message", "Seller Profile Updated Successfully!");
+
+                                    Criteria criteria2 = session.createCriteria(User.class);
+                                    criteria2.add(Restrictions.eq("email", user.getEmail()));
+
+                                    if (!criteria2.list().isEmpty()) {
+                                        User u = (User) criteria2.list().get(0);
+                                        httpSession.setAttribute("user", u);
+                                        Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
+                                        cookie.setHttpOnly(true);
+                                        cookie.setPath("/");
+                                        cookie.setSecure(true);
+                                        response.addCookie(cookie);
+                                    }
                                 }
                             } else {
-                                responseObject.addProperty("message", "Invalid Skill Names!");
+                                responseObject.addProperty("message", "Invalid Skill Names Count!");
                             }
                         } else {
-                            responseObject.addProperty("message", "Invalid Educational Qualifications!");
+                            responseObject.addProperty("message", "Invalid Educational Qualifications Count!");
                         }
                     }
                 } else {
                     responseObject.addProperty("message", "Unknown Seller, Please try again later!");
                 }
+
+                session.close();
             } else {
                 responseObject.addProperty("message", "You're Inactive or Unverified User or Your profile is not Updated!");
             }
