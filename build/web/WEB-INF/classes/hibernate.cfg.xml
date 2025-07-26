@@ -29,5 +29,9 @@
         <mapping class="entity.Gig_Search_Tag" />
         <mapping class="entity.Gig_Search_Tag_Has_Gig" />
         <mapping class="entity.FAQ" />
+        <mapping class="entity.Seller_Education" />
+        <mapping class="entity.User_As_Seller_Has_Seller_Education" />
+        <mapping class="entity.Seller_Skills" />
+        <mapping class="entity.User_As_Seller_Has_Seller_Skills" />
     </session-factory>
 </hibernate-configuration>

@@ -57,7 +57,11 @@ public class SessionFilterSeller implements Filter {
             User user = (User) httpSession.getAttribute("user");
 
             if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller")) {
-                responseObject.addProperty("redirect", "YES");
+                if (user.getDob() == null || user.getUser_Has_Address() == null || user.getLocale() == null) {
+                    responseObject.addProperty("redirect", "NOTOP");
+                } else {
+                    responseObject.addProperty("redirect", "YES");
+                }
             } else {
                 responseObject.addProperty("redirect", "NO");
             }

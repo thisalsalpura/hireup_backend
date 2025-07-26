@@ -16,6 +16,7 @@ import entity.Gig_Search_Tag;
 import entity.Gig_Status;
 import entity.Sub_Category;
 import entity.User;
+import entity.User_As_Seller;
 import hibernate.HibernateUtil;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -88,31 +89,42 @@ public class SaveGig extends HttpServlet {
                 if (httpSession != null && httpSession.getAttribute("user") != null) {
                     User user = (User) httpSession.getAttribute("user");
 
-                    if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller")) {
+                    if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller") && user.getDob() != null && user.getUser_Has_Address() != null && user.getLocale() != null) {
                         Session session = HibernateUtil.getSessionFactory().openSession();
 
-                        Criteria criteria = session.createCriteria(Sub_Category.class);
-                        criteria.add(Restrictions.eq("id", subCategoryId));
+                        Criteria c = session.createCriteria(User_As_Seller.class);
+                        c.add(Restrictions.eq("user", user));
 
-                        if (!criteria.list().isEmpty()) {
-                            Sub_Category sub_Category = (Sub_Category) criteria.list().get(0);
+                        if (!c.list().isEmpty()) {
+                            User_As_Seller user_As_Seller = (User_As_Seller) c.list().get(0);
+                            if (user_As_Seller.getAbout() != null) {
+                                Criteria criteria = session.createCriteria(Sub_Category.class);
+                                criteria.add(Restrictions.eq("id", subCategoryId));
 
-                            Gig gig = new Gig();
-                            gig.setTitle(gigTitle);
-                            gig.setDescription(gigDesc);
-                            gig.setSub_Category(sub_Category);
+                                if (!criteria.list().isEmpty()) {
+                                    Sub_Category sub_Category = (Sub_Category) criteria.list().get(0);
 
-                            httpSession.setAttribute("gig", gig);
+                                    Gig gig = new Gig();
+                                    gig.setTitle(gigTitle);
+                                    gig.setDescription(gigDesc);
+                                    gig.setSub_Category(sub_Category);
 
-                            responseObject.addProperty("status", true);
-                            responseObject.addProperty("setStep", "2");
-                        } else {
-                            responseObject.addProperty("message", "Invalid Sub Category! Please try again later.");
+                                    httpSession.setAttribute("gig", gig);
+
+                                    responseObject.addProperty("status", true);
+                                    responseObject.addProperty("setStep", "2");
+                                } else {
+                                    responseObject.addProperty("message", "Invalid Sub Category! Please try again later.");
+                                }
+                            } else {
+                                responseObject.addProperty("sp", "EMPTY");
+                                responseObject.addProperty("message", "Please update your Seller Profile!");
+                            }
                         }
 
                         session.close();
                     } else {
-                        responseObject.addProperty("message", "You're Inactive or Unverified User!");
+                        responseObject.addProperty("message", "You're Inactive or Unverified User or Your profile is not Updated!");
                     }
                 } else {
                     responseObject.addProperty("message", "You're Session is Timeout.");
@@ -177,64 +189,77 @@ public class SaveGig extends HttpServlet {
                 if (httpSession != null && httpSession.getAttribute("user") != null && httpSession.getAttribute("gig") != null) {
                     User user = (User) httpSession.getAttribute("user");
 
-                    if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller")) {
+                    if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller") && user.getDob() != null && user.getUser_Has_Address() != null && user.getLocale() != null) {
                         Session session = HibernateUtil.getSessionFactory().openSession();
 
-                        Criteria criteria = session.createCriteria(Gig_Package_Type.class);
-                        criteria.add(Restrictions.eq("name", "Bronze"));
+                        Criteria c = session.createCriteria(User_As_Seller.class);
+                        c.add(Restrictions.eq("user", user));
 
-                        Gig_Package_Type bronze = null;
-                        if (!criteria.list().isEmpty()) {
-                            bronze = (Gig_Package_Type) criteria.list().get(0);
+                        if (!c.list().isEmpty()) {
+                            User_As_Seller user_As_Seller = (User_As_Seller) c.list().get(0);
+                            if (user_As_Seller.getAbout() != null) {
+                                Criteria criteria = session.createCriteria(Gig_Package_Type.class);
+                                criteria.add(Restrictions.eq("name", "Bronze"));
+
+                                Gig_Package_Type bronze = null;
+                                if (!criteria.list().isEmpty()) {
+                                    bronze = (Gig_Package_Type) criteria.list().get(0);
+                                }
+
+                                Criteria criteria1 = session.createCriteria(Gig_Package_Type.class);
+                                criteria1.add(Restrictions.eq("name", "Silver"));
+
+                                Gig_Package_Type silver = null;
+                                if (!criteria1.list().isEmpty()) {
+                                    silver = (Gig_Package_Type) criteria1.list().get(0);
+                                }
+
+                                Criteria criteria2 = session.createCriteria(Gig_Package_Type.class);
+                                criteria2.add(Restrictions.eq("name", "Gold"));
+
+                                Gig_Package_Type gold = null;
+                                if (!criteria2.list().isEmpty()) {
+                                    gold = (Gig_Package_Type) criteria2.list().get(0);
+                                }
+
+                                Gig gig = (Gig) httpSession.getAttribute("gig");
+
+                                Gig_Has_Package bronzePackage = new Gig_Has_Package();
+                                bronzePackage.setGig(gig);
+                                bronzePackage.setPackage_Type(bronze);
+                                bronzePackage.setPrice(Double.parseDouble(bronzePrice));
+                                bronzePackage.setDelivery_time(Integer.parseInt(bronzeDTime));
+                                bronzePackage.setExtra_note(bronzeNote);
+
+                                Gig_Has_Package silverPackage = new Gig_Has_Package();
+                                silverPackage.setGig(gig);
+                                silverPackage.setPackage_Type(silver);
+                                silverPackage.setPrice(Double.parseDouble(silverPrice));
+                                silverPackage.setDelivery_time(Integer.parseInt(silverDTime));
+                                silverPackage.setExtra_note(silverNote);
+
+                                Gig_Has_Package goldPackage = new Gig_Has_Package();
+                                goldPackage.setGig(gig);
+                                goldPackage.setPackage_Type(gold);
+                                goldPackage.setPrice(Double.parseDouble(goldPrice));
+                                goldPackage.setDelivery_time(Integer.parseInt(goldDTime));
+                                goldPackage.setExtra_note(goldNote);
+
+                                httpSession.setAttribute("bronzePackage", bronzePackage);
+                                httpSession.setAttribute("silverPackage", silverPackage);
+                                httpSession.setAttribute("goldPackage", goldPackage);
+
+                                responseObject.addProperty("status", true);
+                                responseObject.addProperty("setStep", "3");
+                            } else {
+                                responseObject.addProperty("sp", "EMPTY");
+                                responseObject.addProperty("message", "Please update your Seller Profile!");
+                            }
                         }
 
-                        Criteria criteria1 = session.createCriteria(Gig_Package_Type.class);
-                        criteria1.add(Restrictions.eq("name", "Silver"));
-
-                        Gig_Package_Type silver = null;
-                        if (!criteria1.list().isEmpty()) {
-                            silver = (Gig_Package_Type) criteria1.list().get(0);
-                        }
-
-                        Criteria criteria2 = session.createCriteria(Gig_Package_Type.class);
-                        criteria2.add(Restrictions.eq("name", "Gold"));
-
-                        Gig_Package_Type gold = null;
-                        if (!criteria2.list().isEmpty()) {
-                            gold = (Gig_Package_Type) criteria2.list().get(0);
-                        }
-
-                        Gig gig = (Gig) httpSession.getAttribute("gig");
-
-                        Gig_Has_Package bronzePackage = new Gig_Has_Package();
-                        bronzePackage.setGig(gig);
-                        bronzePackage.setPackage_Type(bronze);
-                        bronzePackage.setPrice(Double.parseDouble(bronzePrice));
-                        bronzePackage.setDelivery_time(Integer.parseInt(bronzeDTime));
-                        bronzePackage.setExtra_note(bronzeNote);
-
-                        Gig_Has_Package silverPackage = new Gig_Has_Package();
-                        silverPackage.setGig(gig);
-                        silverPackage.setPackage_Type(silver);
-                        silverPackage.setPrice(Double.parseDouble(silverPrice));
-                        silverPackage.setDelivery_time(Integer.parseInt(silverDTime));
-                        silverPackage.setExtra_note(silverNote);
-
-                        Gig_Has_Package goldPackage = new Gig_Has_Package();
-                        goldPackage.setGig(gig);
-                        goldPackage.setPackage_Type(gold);
-                        goldPackage.setPrice(Double.parseDouble(goldPrice));
-                        goldPackage.setDelivery_time(Integer.parseInt(goldDTime));
-                        goldPackage.setExtra_note(goldNote);
-
-                        httpSession.setAttribute("bronzePackage", bronzePackage);
-                        httpSession.setAttribute("silverPackage", silverPackage);
-                        httpSession.setAttribute("goldPackage", goldPackage);
-
-                        responseObject.addProperty("status", true);
-                        responseObject.addProperty("setStep", "3");
+                        session.close();
                     } else {
-                        responseObject.addProperty("message", "You're Inactive or Unverified User!");
+                        responseObject.addProperty("message", "You're Inactive or Unverified User or Your profile is not Updated!");
                     }
                 } else {
                     responseObject.addProperty("message", "You're Session is Timeout.");
@@ -249,71 +274,85 @@ public class SaveGig extends HttpServlet {
             if (httpSession != null && httpSession.getAttribute("user") != null && httpSession.getAttribute("gig") != null && httpSession.getAttribute("bronzePackage") != null && httpSession.getAttribute("silverPackage") != null && httpSession.getAttribute("goldPackage") != null) {
                 User user = (User) httpSession.getAttribute("user");
 
-                if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller")) {
+                if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller") && user.getDob() != null && user.getUser_Has_Address() != null && user.getLocale() != null) {
+                    Session session = HibernateUtil.getSessionFactory().openSession();
 
-                    if (searchNames.size() == 10) {
-                        List<String> searchNamesList = new ArrayList<>();
-                        for (int i = 0; i < searchNames.size(); i++) {
-                            String searchName = searchNames.get(i).getAsString();
+                    Criteria c = session.createCriteria(User_As_Seller.class);
+                    c.add(Restrictions.eq("user", user));
 
-                            if (searchName.isEmpty()) {
-                                responseObject.addProperty("message", "Invalid Search Name Tags!");
-                                return;
-                            } else if (searchName.length() >= 20) {
-                                responseObject.addProperty("message", "Invalid Search Name Tags!");
-                                return;
-                            } else if (!searchName.matches("^[A-Za-z]+$")) {
-                                responseObject.addProperty("message", "Invalid Search Name Tags!");
-                                return;
-                            } else {
-                                searchNamesList.add(searchNames.get(i).getAsString());
-                            }
-                        }
+                    if (!c.list().isEmpty()) {
+                        User_As_Seller user_As_Seller = (User_As_Seller) c.list().get(0);
+                        if (user_As_Seller.getAbout() != null) {
+                            if (searchNames.size() == 10) {
+                                List<String> searchNamesList = new ArrayList<>();
+                                for (int i = 0; i < searchNames.size(); i++) {
+                                    String searchName = searchNames.get(i).getAsString();
 
-                        if (faqs.size() == 3) {
-                            Map<String, String> faqsMap = new HashMap<>();
-                            for (int i = 0; i < faqs.size(); i++) {
-                                JsonObject faqObj = faqs.get(i).getAsJsonObject();
-                                String question = faqObj.get("question").getAsString();
-                                String answer = faqObj.get("answer").getAsString();
-
-                                if (question.isEmpty() && answer.isEmpty()) {
-                                    responseObject.addProperty("message", "Invalid FAQs!");
-                                    return;
-                                } else {
-                                    faqsMap.put(question, answer);
+                                    if (searchName.isEmpty()) {
+                                        responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                        return;
+                                    } else if (searchName.length() >= 20) {
+                                        responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                        return;
+                                    } else if (!searchName.matches("^[A-Za-z]+$")) {
+                                        responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                        return;
+                                    } else {
+                                        searchNamesList.add(searchName);
+                                    }
                                 }
-                            }
 
-                            if (!searchNamesList.isEmpty()) {
-                                if (searchNamesList.size() == 10) {
-                                    if (!faqsMap.isEmpty()) {
-                                        if (faqsMap.size() == 3) {
-                                            httpSession.setAttribute("searchNames", searchNamesList);
-                                            httpSession.setAttribute("faqs", faqsMap);
+                                if (faqs.size() == 3) {
+                                    Map<String, String> faqsMap = new HashMap<>();
+                                    for (int i = 0; i < faqs.size(); i++) {
+                                        JsonObject faqObj = faqs.get(i).getAsJsonObject();
+                                        String question = faqObj.get("question").getAsString();
+                                        String answer = faqObj.get("answer").getAsString();
 
-                                            responseObject.addProperty("status", true);
-                                            responseObject.addProperty("setStep", "4");
-                                        } else {
+                                        if (question.isEmpty() && answer.isEmpty()) {
                                             responseObject.addProperty("message", "Invalid FAQs!");
+                                            return;
+                                        } else {
+                                            faqsMap.put(question, answer);
+                                        }
+                                    }
+
+                                    if (!searchNamesList.isEmpty()) {
+                                        if (searchNamesList.size() == 10) {
+                                            if (!faqsMap.isEmpty()) {
+                                                if (faqsMap.size() == 3) {
+                                                    httpSession.setAttribute("searchNames", searchNamesList);
+                                                    httpSession.setAttribute("faqs", faqsMap);
+
+                                                    responseObject.addProperty("status", true);
+                                                    responseObject.addProperty("setStep", "4");
+                                                } else {
+                                                    responseObject.addProperty("message", "Invalid FAQs!");
+                                                }
+                                            } else {
+                                                responseObject.addProperty("message", "Invalid FAQs!");
+                                            }
+                                        } else {
+                                            responseObject.addProperty("message", "Invalid Search Name Tags!");
                                         }
                                     } else {
-                                        responseObject.addProperty("message", "Invalid FAQs!");
+                                        responseObject.addProperty("message", "Invalid Search Name Tags!");
                                     }
                                 } else {
-                                    responseObject.addProperty("message", "Invalid Search Name Tags!");
+                                    responseObject.addProperty("message", "Invalid FAQs!");
                                 }
                             } else {
                                 responseObject.addProperty("message", "Invalid Search Name Tags!");
                             }
                         } else {
-                            responseObject.addProperty("message", "Invalid FAQs!");
+                            responseObject.addProperty("sp", "EMPTY");
+                            responseObject.addProperty("message", "Please update your Seller Profile!");
                         }
-                    } else {
-                        responseObject.addProperty("message", "Invalid Search Name Tags!");
                     }
+
+                    session.close();
                 } else {
-                    responseObject.addProperty("message", "You're Inactive or Unverified User!");
+                    responseObject.addProperty("message", "You're Inactive or Unverified User or Your profile is not Updated!");
                 }
 
             } else {
@@ -345,110 +384,119 @@ public class SaveGig extends HttpServlet {
                                 if (httpSession != null && httpSession.getAttribute("user") != null && httpSession.getAttribute("gig") != null && httpSession.getAttribute("bronzePackage") != null && httpSession.getAttribute("silverPackage") != null && httpSession.getAttribute("goldPackage") != null && httpSession.getAttribute("searchNames") != null && httpSession.getAttribute("faqs") != null) {
                                     User user = (User) httpSession.getAttribute("user");
 
-                                    if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller")) {
-
+                                    if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!") && user.getUser_Type().getValue().equals("Seller") && user.getDob() != null && user.getUser_Has_Address() != null && user.getLocale() != null) {
                                         Session session = HibernateUtil.getSessionFactory().openSession();
 
-                                        Criteria criteria = session.createCriteria(Gig_Status.class);
-                                        criteria.add(Restrictions.eq("value", "Pending"));
+                                        Criteria c = session.createCriteria(User_As_Seller.class);
+                                        c.add(Restrictions.eq("user", user));
 
-                                        if (!criteria.list().isEmpty()) {
-                                            Gig gig = (Gig) httpSession.getAttribute("gig");
-                                            Gig_Status gig_Status = (Gig_Status) criteria.list().get(0);
+                                        if (!c.list().isEmpty()) {
+                                            User_As_Seller user_As_Seller = (User_As_Seller) c.list().get(0);
+                                            if (user_As_Seller.getAbout() != null) {
+                                                Criteria criteria = session.createCriteria(Gig_Status.class);
+                                                criteria.add(Restrictions.eq("value", "Pending"));
 
-                                            gig.setCreated_at(new Date());
-                                            gig.setStatus(gig_Status);
-                                            gig.setUser(user);
+                                                if (!criteria.list().isEmpty()) {
+                                                    Gig gig = (Gig) httpSession.getAttribute("gig");
+                                                    Gig_Status gig_Status = (Gig_Status) criteria.list().get(0);
 
-                                            int gigId = (int) session.save(gig);
+                                                    gig.setCreated_at(new Date());
+                                                    gig.setStatus(gig_Status);
+                                                    gig.setUser(user);
 
-                                            Gig_Has_Package bronzePackage = (Gig_Has_Package) httpSession.getAttribute("bronzePackage");
-                                            Gig_Has_Package silverPackage = (Gig_Has_Package) httpSession.getAttribute("silverPackage");
-                                            Gig_Has_Package goldPackage = (Gig_Has_Package) httpSession.getAttribute("goldPackage");
+                                                    int gigId = (int) session.save(gig);
 
-                                            session.save(bronzePackage);
-                                            session.save(silverPackage);
-                                            session.save(goldPackage);
+                                                    Gig_Has_Package bronzePackage = (Gig_Has_Package) httpSession.getAttribute("bronzePackage");
+                                                    Gig_Has_Package silverPackage = (Gig_Has_Package) httpSession.getAttribute("silverPackage");
+                                                    Gig_Has_Package goldPackage = (Gig_Has_Package) httpSession.getAttribute("goldPackage");
 
-                                            List<String> searchNames = (List<String>) httpSession.getAttribute("searchNames");
+                                                    session.save(bronzePackage);
+                                                    session.save(silverPackage);
+                                                    session.save(goldPackage);
 
-                                            for (String searchName : searchNames) {
-                                                Criteria criteria1 = session.createCriteria(Gig_Search_Tag.class);
-                                                criteria1.add(Restrictions.eq("name", searchName));
-                                                Gig_Search_Tag search_Tag;
-                                                if (criteria1.list().isEmpty()) {
-                                                    search_Tag = new Gig_Search_Tag();
-                                                    search_Tag.setName(searchName);
-                                                    session.save(search_Tag);
+                                                    List<String> searchNames = (List<String>) httpSession.getAttribute("searchNames");
+
+                                                    for (String searchName : searchNames) {
+                                                        Criteria criteria1 = session.createCriteria(Gig_Search_Tag.class);
+                                                        criteria1.add(Restrictions.eq("name", searchName));
+                                                        Gig_Search_Tag search_Tag;
+                                                        if (criteria1.list().isEmpty()) {
+                                                            search_Tag = new Gig_Search_Tag();
+                                                            search_Tag.setName(searchName);
+                                                            session.save(search_Tag);
+                                                        } else {
+                                                            search_Tag = (Gig_Search_Tag) criteria1.list().get(0);
+                                                        }
+                                                        Gig_Search_Tag_Has_Gig gig_Search_Tag_Has_Gig = new Gig_Search_Tag_Has_Gig();
+                                                        gig_Search_Tag_Has_Gig.setSearch_Tag(search_Tag);
+                                                        gig_Search_Tag_Has_Gig.setGig(gig);
+                                                        session.save(gig_Search_Tag_Has_Gig);
+                                                    }
+
+                                                    Map<String, String> faqs = (Map<String, String>) httpSession.getAttribute("faqs");
+
+                                                    for (Map.Entry<String, String> faq : faqs.entrySet()) {
+                                                        FAQ faqEntity = new FAQ();
+                                                        faqEntity.setQuestion(faq.getKey());
+                                                        faqEntity.setAnswer(faq.getValue());
+                                                        faqEntity.setGig(gig);
+                                                        session.save(faqEntity);
+                                                    }
+
+                                                    session.beginTransaction().commit();
+
+                                                    String appPath = getServletContext().getRealPath("");
+                                                    String newPath = appPath.replace("build" + File.separator + "web", "web" + File.separator + "gig-images");
+
+                                                    try {
+                                                        File gigFolder = new File(newPath, String.valueOf(gigId));
+                                                        gigFolder.mkdir();
+
+                                                        InputStream imgInputStream1 = part1.getInputStream();
+                                                        BufferedImage bufferedImage1 = ImageIO.read(imgInputStream1);
+                                                        File file1 = new File(gigFolder, "image1.png");
+                                                        ImageIO.write(bufferedImage1, "png", file1);
+
+                                                        InputStream imgInputStream2 = part2.getInputStream();
+                                                        BufferedImage bufferedImage2 = ImageIO.read(imgInputStream2);
+                                                        File file2 = new File(gigFolder, "image2.png");
+                                                        ImageIO.write(bufferedImage2, "png", file2);
+
+                                                        InputStream imgInputStream3 = part3.getInputStream();
+                                                        BufferedImage bufferedImage3 = ImageIO.read(imgInputStream3);
+                                                        File file3 = new File(gigFolder, "image3.png");
+                                                        ImageIO.write(bufferedImage3, "png", file3);
+
+                                                        File file4 = new File(gigFolder, "document.pdf");
+                                                        Files.copy(part4.getInputStream(), file4.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                                    } catch (IOException e) {
+                                                        responseObject.addProperty("message", "Something went wrong!");
+                                                    } catch (Exception e) {
+                                                        responseObject.addProperty("message", "Something went wrong!");
+                                                    }
+
+                                                    responseObject.addProperty("status", true);
+                                                    responseObject.addProperty("setStep", "FINISH");
+                                                    responseObject.addProperty("message", "Gig registerd successfully, but still it in a Pending Status, after admin Verify it, then it inform to you with a Email!");
+
+                                                    httpSession.removeAttribute("gig");
+                                                    httpSession.removeAttribute("bronzePackage");
+                                                    httpSession.removeAttribute("silverPackage");
+                                                    httpSession.removeAttribute("goldPackage");
+                                                    httpSession.removeAttribute("searchNames");
+                                                    httpSession.removeAttribute("faqs");
                                                 } else {
-                                                    search_Tag = (Gig_Search_Tag) criteria1.list().get(0);
+                                                    responseObject.addProperty("message", "Something went wrong!");
                                                 }
-                                                Gig_Search_Tag_Has_Gig gig_Search_Tag_Has_Gig = new Gig_Search_Tag_Has_Gig();
-                                                gig_Search_Tag_Has_Gig.setSearch_Tag(search_Tag);
-                                                gig_Search_Tag_Has_Gig.setGig(gig);
-                                                session.save(gig_Search_Tag_Has_Gig);
+                                            } else {
+                                                responseObject.addProperty("sp", "EMPTY");
+                                                responseObject.addProperty("message", "Please update your Seller Profile!");
                                             }
-
-                                            Map<String, String> faqs = (Map<String, String>) httpSession.getAttribute("faqs");
-
-                                            for (Map.Entry<String, String> faq : faqs.entrySet()) {
-                                                FAQ faqEntity = new FAQ();
-                                                faqEntity.setQuestion(faq.getKey());
-                                                faqEntity.setAnswer(faq.getValue());
-                                                faqEntity.setGig(gig);
-                                                session.save(faqEntity);
-                                            }
-
-                                            session.beginTransaction().commit();
-
-                                            String appPath = getServletContext().getRealPath("");
-                                            String newPath = appPath.replace("build" + File.separator + "web", "web" + File.separator + "gig-images");
-
-                                            try {
-                                                File gigFolder = new File(newPath, String.valueOf(gigId));
-                                                gigFolder.mkdir();
-
-                                                InputStream imgInputStream1 = part1.getInputStream();
-                                                BufferedImage bufferedImage1 = ImageIO.read(imgInputStream1);
-                                                File file1 = new File(gigFolder, "image1.png");
-                                                ImageIO.write(bufferedImage1, "png", file1);
-
-                                                InputStream imgInputStream2 = part2.getInputStream();
-                                                BufferedImage bufferedImage2 = ImageIO.read(imgInputStream2);
-                                                File file2 = new File(gigFolder, "image2.png");
-                                                ImageIO.write(bufferedImage2, "png", file2);
-
-                                                InputStream imgInputStream3 = part3.getInputStream();
-                                                BufferedImage bufferedImage3 = ImageIO.read(imgInputStream3);
-                                                File file3 = new File(gigFolder, "image3.png");
-                                                ImageIO.write(bufferedImage3, "png", file3);
-
-                                                File file4 = new File(gigFolder, "document.pdf");
-                                                Files.copy(part4.getInputStream(), file4.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                                            } catch (IOException e) {
-                                                responseObject.addProperty("message", "Something went wrong!");
-                                            } catch (Exception e) {
-                                                responseObject.addProperty("message", "Something went wrong!");
-                                            }
-
-                                            responseObject.addProperty("status", true);
-                                            responseObject.addProperty("setStep", "FINISH");
-                                            responseObject.addProperty("message", "Gig registerd successfully, but still it in a Pending Status, after admin Verify it, then it inform to you with a Email!");
-
-                                            httpSession.removeAttribute("gig");
-                                            httpSession.removeAttribute("bronzePackage");
-                                            httpSession.removeAttribute("silverPackage");
-                                            httpSession.removeAttribute("goldPackage");
-                                            httpSession.removeAttribute("searchNames");
-                                            httpSession.removeAttribute("faqs");
-                                        } else {
-                                            responseObject.addProperty("message", "Something went wrong!");
                                         }
 
                                         session.close();
-
                                     } else {
-                                        responseObject.addProperty("message", "You're Inactive or Unverified User!");
+                                        responseObject.addProperty("message", "You're Inactive or Unverified User or Your profile is not Updated!");
                                     }
                                 } else {
                                     responseObject.addProperty("message", "You're Session is Timeout.");
