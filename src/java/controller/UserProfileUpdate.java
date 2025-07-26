@@ -104,8 +104,6 @@ public class UserProfileUpdate extends HttpServlet {
                     criteria2.add(Restrictions.eq("email", user.getEmail()));
 
                     if (!criteria2.list().isEmpty()) {
-                        responseObject.addProperty("status", true);
-
                         User u = (User) criteria2.list().get(0);
                         u.setFname(fname);
                         u.setLname(lname);
@@ -118,7 +116,7 @@ public class UserProfileUpdate extends HttpServlet {
                             ex.printStackTrace();
                         }
 
-                        if (dob.before(new Date())) {
+                        if (dob != null && dob.before(new Date())) {
                             u.setDob(dob);
 
                             User_Has_Address user_has_address;
