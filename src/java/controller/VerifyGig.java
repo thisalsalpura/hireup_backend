@@ -49,14 +49,14 @@ public class VerifyGig extends HttpServlet {
             if (!criteria.list().isEmpty()) {
                 Gig gig = (Gig) criteria.list().get(0);
 
-                if (gig.getStatus().getValue().equals("Pending")) {
+                if (gig.getGig_Status().getValue().equals("Pending")) {
                     Criteria criteria1 = session.createCriteria(Gig_Status.class);
                     criteria1.add(Restrictions.eq("value", "Verified"));
 
                     if (!criteria1.list().isEmpty()) {
                         Gig_Status gig_Status = (Gig_Status) criteria1.list().get(0);
 
-                        gig.setStatus(gig_Status);
+                        gig.setGig_Status(gig_Status);
                         session.merge(gig);
                         session.beginTransaction().commit();
 

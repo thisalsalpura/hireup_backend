@@ -52,7 +52,7 @@ public class LoadSingleGigData extends HttpServlet {
             if (!criteria.list().isEmpty()) {
                 Gig gig = (Gig) criteria.list().get(0);
 
-                if (gig.getStatus().getValue().equals("Verified")) {
+                if (gig.getGig_Status().getValue().equals("Verified") && gig.getGig_Visible_Status().getName().equals("Active")) {
                     gig.getUser().setId(-1);
                     gig.getUser().setEmail(null);
                     gig.getUser().setPassword(null);

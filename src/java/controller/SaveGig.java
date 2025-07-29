@@ -14,6 +14,7 @@ import entity.Gig_Package_Type;
 import entity.Gig_Search_Tag_Has_Gig;
 import entity.Gig_Search_Tag;
 import entity.Gig_Status;
+import entity.Gig_Visible_Status;
 import entity.Sub_Category;
 import entity.User;
 import entity.User_As_Seller;
@@ -30,6 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -48,7 +51,7 @@ import org.hibernate.criterion.Restrictions;
  *
  * @author User
  */
-@MultipartConfig
+@MultipartConfig(fileSizeThreshold = 1024 * 1024 * 2, maxFileSize = 1024 * 1024 * 5, maxRequestSize = 1024 * 1024 * 20)
 @WebServlet(name = "SaveGig", urlPatterns = {"/SaveGig"})
 public class SaveGig extends HttpServlet {
 
@@ -79,6 +82,8 @@ public class SaveGig extends HttpServlet {
         HttpSession httpSession = request.getSession(false);
 
         if (activeStep == 1) {
+            responseObject.addProperty("status", false);
+
             String gigTitle = jsonObject.get("gigTitle").getAsString();
             String gigDesc = jsonObject.get("gigDesc").getAsString();
             int categoryId = jsonObject.get("categoryId").getAsInt();
@@ -140,6 +145,8 @@ public class SaveGig extends HttpServlet {
         }
 
         if (activeStep == 2) {
+            responseObject.addProperty("status", false);
+
             String bronzePrice = jsonObject.get("bronzePrice").getAsString();
             String bronzeDTime = jsonObject.get("bronzeDTime").getAsString();
             String bronzeNote = jsonObject.get("bronzeNote").getAsString();
@@ -275,6 +282,8 @@ public class SaveGig extends HttpServlet {
         }
 
         if (activeStep == 3) {
+            responseObject.addProperty("status", false);
+
             JsonArray searchNames = jsonObject.get("searchNamesList").getAsJsonArray();
             JsonArray faqs = jsonObject.get("faqsList").getAsJsonArray();
 
@@ -372,6 +381,8 @@ public class SaveGig extends HttpServlet {
         }
 
         if (activeStep == 4) {
+            responseObject.addProperty("status", false);
+
             Part part1 = request.getPart("image1");
             Part part2 = request.getPart("image2");
             Part part3 = request.getPart("image3");
@@ -408,94 +419,213 @@ public class SaveGig extends HttpServlet {
                                                 criteria.add(Restrictions.eq("value", "Pending"));
 
                                                 if (!criteria.list().isEmpty()) {
-                                                    Gig gig = (Gig) httpSession.getAttribute("gig");
-                                                    Gig_Status gig_Status = (Gig_Status) criteria.list().get(0);
-
-                                                    gig.setCreated_at(new Date());
-                                                    gig.setStatus(gig_Status);
-                                                    gig.setUser(user);
-
-                                                    int gigId = (int) session.save(gig);
-
-                                                    Gig_Has_Package bronzePackage = (Gig_Has_Package) httpSession.getAttribute("bronzePackage");
-                                                    Gig_Has_Package silverPackage = (Gig_Has_Package) httpSession.getAttribute("silverPackage");
-                                                    Gig_Has_Package goldPackage = (Gig_Has_Package) httpSession.getAttribute("goldPackage");
-
-                                                    session.save(bronzePackage);
-                                                    session.save(silverPackage);
-                                                    session.save(goldPackage);
-
-                                                    List<String> searchNames = (List<String>) httpSession.getAttribute("searchNames");
-
-                                                    for (String searchName : searchNames) {
-                                                        Criteria criteria1 = session.createCriteria(Gig_Search_Tag.class);
-                                                        criteria1.add(Restrictions.eq("name", searchName));
-                                                        Gig_Search_Tag search_Tag;
-                                                        if (criteria1.list().isEmpty()) {
-                                                            search_Tag = new Gig_Search_Tag();
-                                                            search_Tag.setName(searchName);
-                                                            session.save(search_Tag);
-                                                        } else {
-                                                            search_Tag = (Gig_Search_Tag) criteria1.list().get(0);
-                                                        }
-                                                        Gig_Search_Tag_Has_Gig gig_Search_Tag_Has_Gig = new Gig_Search_Tag_Has_Gig();
-                                                        gig_Search_Tag_Has_Gig.setSearch_Tag(search_Tag);
-                                                        gig_Search_Tag_Has_Gig.setGig(gig);
-                                                        session.save(gig_Search_Tag_Has_Gig);
-                                                    }
-
-                                                    Map<String, String> faqs = (Map<String, String>) httpSession.getAttribute("faqs");
-
-                                                    for (Map.Entry<String, String> faq : faqs.entrySet()) {
-                                                        FAQ faqEntity = new FAQ();
-                                                        faqEntity.setQuestion(faq.getKey());
-                                                        faqEntity.setAnswer(faq.getValue());
-                                                        faqEntity.setGig(gig);
-                                                        session.save(faqEntity);
-                                                    }
-
-                                                    session.beginTransaction().commit();
-
-                                                    String appPath = getServletContext().getRealPath("");
-                                                    String newPath = appPath.replace("build" + File.separator + "web", "web" + File.separator + "gig-images");
+                                                    List<File> savedFiles = new ArrayList<>();
+                                                    File gigFolder = null;
 
                                                     try {
-                                                        File gigFolder = new File(newPath, String.valueOf(gigId));
+                                                        BufferedImage bufferedImage1, bufferedImage2, bufferedImage3;
+                                                        try (InputStream imgInputStream1 = part1.getInputStream(); ImageInputStream imageInputStream1 = ImageIO.createImageInputStream(imgInputStream1)) {
+                                                            if (!ImageIO.getImageReaders(imageInputStream1).hasNext()) {
+                                                                responseObject.addProperty("message", "Image 1 is not a supported image format!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                            ImageReader reader1 = ImageIO.getImageReaders(imageInputStream1).next();
+                                                            reader1.setInput(imageInputStream1);
+                                                            int width1 = reader1.getWidth(0);
+                                                            int height1 = reader1.getHeight(0);
+                                                            reader1.dispose();
+                                                            if (width1 * height1 > 5000 * 5000) {
+                                                                responseObject.addProperty("message", "Image 1 is too large!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                            try (InputStream imgInputStream1Reload = part1.getInputStream()) {
+                                                                bufferedImage1 = ImageIO.read(imgInputStream1Reload);
+                                                            }
+                                                            if (bufferedImage1 == null) {
+                                                                responseObject.addProperty("message", "Image 1 is not a valid image format or size!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                        } catch (IOException e) {
+                                                            responseObject.addProperty("message", "Error processing Image 1!");
+                                                            sendJsonResponse(response, responseObject);
+                                                            return;
+                                                        }
+
+                                                        try (InputStream imgInputStream2 = part2.getInputStream(); ImageInputStream imageInputStream2 = ImageIO.createImageInputStream(imgInputStream2)) {
+                                                            if (!ImageIO.getImageReaders(imageInputStream2).hasNext()) {
+                                                                responseObject.addProperty("message", "Image 2 is not a supported image format!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                            ImageReader reader2 = ImageIO.getImageReaders(imageInputStream2).next();
+                                                            reader2.setInput(imageInputStream2);
+                                                            int width2 = reader2.getWidth(0);
+                                                            int height2 = reader2.getHeight(0);
+                                                            reader2.dispose();
+                                                            if (width2 * height2 > 5000 * 5000) {
+                                                                responseObject.addProperty("message", "Image 2 is too large!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                            try (InputStream imgInputStream2Reload = part2.getInputStream()) {
+                                                                bufferedImage2 = ImageIO.read(imgInputStream2Reload);
+                                                            }
+                                                            if (bufferedImage2 == null) {
+                                                                responseObject.addProperty("message", "Image 2 is not a valid image format or size!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                        } catch (IOException e) {
+                                                            responseObject.addProperty("message", "Error processing Image 2!");
+                                                            sendJsonResponse(response, responseObject);
+                                                            return;
+                                                        }
+
+                                                        try (InputStream imgInputStream3 = part3.getInputStream(); ImageInputStream imageInputStream3 = ImageIO.createImageInputStream(imgInputStream3)) {
+                                                            if (!ImageIO.getImageReaders(imageInputStream3).hasNext()) {
+                                                                responseObject.addProperty("message", "Image 3 is not a supported image format!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                            ImageReader reader3 = ImageIO.getImageReaders(imageInputStream3).next();
+                                                            reader3.setInput(imageInputStream3);
+                                                            int width3 = reader3.getWidth(0);
+                                                            int height3 = reader3.getHeight(0);
+                                                            reader3.dispose();
+                                                            if (width3 * height3 > 5000 * 5000) {
+                                                                responseObject.addProperty("message", "Image 3 is too large!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                            try (InputStream imgInputStream3Reload = part3.getInputStream()) {
+                                                                bufferedImage3 = ImageIO.read(imgInputStream3Reload);
+                                                            }
+                                                            if (bufferedImage3 == null) {
+                                                                responseObject.addProperty("message", "Image 3 is not a valid image format or size!");
+                                                                sendJsonResponse(response, responseObject);
+                                                                return;
+                                                            }
+                                                        } catch (IOException e) {
+                                                            responseObject.addProperty("message", "Error processing Image 3!");
+                                                            sendJsonResponse(response, responseObject);
+                                                            return;
+                                                        }
+
+                                                        Gig gig = (Gig) httpSession.getAttribute("gig");
+                                                        Gig_Status gig_Status = (Gig_Status) criteria.list().get(0);
+                                                        
+                                                        Criteria criteria1 = session.createCriteria(Gig_Visible_Status.class);
+                                                        criteria1.add(Restrictions.eq("name", "Active"));
+                                                        
+                                                        Gig_Visible_Status visible_Status = null;
+                                                        if (!criteria1.list().isEmpty()) {
+                                                            visible_Status = (Gig_Visible_Status) criteria1.list().get(0);
+                                                        }
+
+                                                        gig.setCreated_at(new Date());
+                                                        gig.setGig_Status(gig_Status);
+                                                        gig.setUser(user);
+                                                        gig.setGig_Visible_Status(visible_Status);
+
+                                                        int gigId = (int) session.save(gig);
+
+                                                        Gig_Has_Package bronzePackage = (Gig_Has_Package) httpSession.getAttribute("bronzePackage");
+                                                        Gig_Has_Package silverPackage = (Gig_Has_Package) httpSession.getAttribute("silverPackage");
+                                                        Gig_Has_Package goldPackage = (Gig_Has_Package) httpSession.getAttribute("goldPackage");
+
+                                                        session.save(bronzePackage);
+                                                        session.save(silverPackage);
+                                                        session.save(goldPackage);
+
+                                                        List<String> searchNames = (List<String>) httpSession.getAttribute("searchNames");
+
+                                                        for (String searchName : searchNames) {
+                                                            Criteria criteria2 = session.createCriteria(Gig_Search_Tag.class);
+                                                            criteria2.add(Restrictions.eq("name", searchName));
+                                                            Gig_Search_Tag search_Tag;
+                                                            if (criteria2.list().isEmpty()) {
+                                                                search_Tag = new Gig_Search_Tag();
+                                                                search_Tag.setName(searchName);
+                                                                session.save(search_Tag);
+                                                            } else {
+                                                                search_Tag = (Gig_Search_Tag) criteria2.list().get(0);
+                                                            }
+                                                            Gig_Search_Tag_Has_Gig gig_Search_Tag_Has_Gig = new Gig_Search_Tag_Has_Gig();
+                                                            gig_Search_Tag_Has_Gig.setSearch_Tag(search_Tag);
+                                                            gig_Search_Tag_Has_Gig.setGig(gig);
+                                                            session.save(gig_Search_Tag_Has_Gig);
+                                                        }
+
+                                                        Map<String, String> faqs = (Map<String, String>) httpSession.getAttribute("faqs");
+
+                                                        for (Map.Entry<String, String> faq : faqs.entrySet()) {
+                                                            FAQ faqEntity = new FAQ();
+                                                            faqEntity.setQuestion(faq.getKey());
+                                                            faqEntity.setAnswer(faq.getValue());
+                                                            faqEntity.setGig(gig);
+                                                            session.save(faqEntity);
+                                                        }
+
+                                                        String appPath = getServletContext().getRealPath("");
+                                                        String newPath = appPath.replace("build" + File.separator + "web", "web" + File.separator + "gig-images");
+
+                                                        gigFolder = new File(newPath, String.valueOf(gigId));
                                                         gigFolder.mkdir();
 
-                                                        InputStream imgInputStream1 = part1.getInputStream();
-                                                        BufferedImage bufferedImage1 = ImageIO.read(imgInputStream1);
                                                         File file1 = new File(gigFolder, "image1.png");
                                                         ImageIO.write(bufferedImage1, "png", file1);
+                                                        savedFiles.add(file1);
 
-                                                        InputStream imgInputStream2 = part2.getInputStream();
-                                                        BufferedImage bufferedImage2 = ImageIO.read(imgInputStream2);
                                                         File file2 = new File(gigFolder, "image2.png");
                                                         ImageIO.write(bufferedImage2, "png", file2);
+                                                        savedFiles.add(file2);
 
-                                                        InputStream imgInputStream3 = part3.getInputStream();
-                                                        BufferedImage bufferedImage3 = ImageIO.read(imgInputStream3);
                                                         File file3 = new File(gigFolder, "image3.png");
                                                         ImageIO.write(bufferedImage3, "png", file3);
+                                                        savedFiles.add(file3);
 
-                                                        File file4 = new File(gigFolder, "document.pdf");
-                                                        Files.copy(part4.getInputStream(), file4.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                                                    } catch (IOException e) {
-                                                        responseObject.addProperty("message", "Something went wrong!");
+                                                        try (InputStream docInputStream = part4.getInputStream()) {
+                                                            File file4 = new File(gigFolder, "document.pdf");
+                                                            Files.copy(docInputStream, file4.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                                                            savedFiles.add(file4);
+                                                        } catch (IOException e) {
+                                                            responseObject.addProperty("message", "Error processing Document!");
+                                                            sendJsonResponse(response, responseObject);
+                                                            return;
+                                                        }
+
+                                                        session.beginTransaction().commit();
+
+                                                        httpSession.removeAttribute("gig");
+                                                        httpSession.removeAttribute("bronzePackage");
+                                                        httpSession.removeAttribute("silverPackage");
+                                                        httpSession.removeAttribute("goldPackage");
+                                                        httpSession.removeAttribute("searchNames");
+                                                        httpSession.removeAttribute("faqs");
+
+                                                        responseObject.addProperty("status", true);
+                                                        responseObject.addProperty("setStep", "FINISH");
+                                                        responseObject.addProperty("message", "Gig registerd successfully, but still it in a Pending Status, after admin Verify it, then it inform to you with a Email!");
+                                                        sendJsonResponse(response, responseObject);
+                                                        return;
                                                     } catch (Exception e) {
+                                                        for (File file : savedFiles) {
+                                                            if (file.exists()) {
+                                                                file.delete();
+                                                            }
+                                                        }
+
+                                                        if (gigFolder != null && gigFolder.isDirectory() && gigFolder.list().length == 0) {
+                                                            gigFolder.delete();
+                                                        }
+
                                                         responseObject.addProperty("message", "Something went wrong!");
+                                                        sendJsonResponse(response, responseObject);
+                                                        return;
                                                     }
-
-                                                    responseObject.addProperty("status", true);
-                                                    responseObject.addProperty("setStep", "FINISH");
-                                                    responseObject.addProperty("message", "Gig registerd successfully, but still it in a Pending Status, after admin Verify it, then it inform to you with a Email!");
-
-                                                    httpSession.removeAttribute("gig");
-                                                    httpSession.removeAttribute("bronzePackage");
-                                                    httpSession.removeAttribute("silverPackage");
-                                                    httpSession.removeAttribute("goldPackage");
-                                                    httpSession.removeAttribute("searchNames");
-                                                    httpSession.removeAttribute("faqs");
                                                 } else {
                                                     responseObject.addProperty("message", "Something went wrong!");
                                                 }

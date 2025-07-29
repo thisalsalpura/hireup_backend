@@ -36,21 +36,25 @@ public class Gig implements Serializable {
     @Lob
     @Column(name = "description", nullable = false)
     private String description;
-    
+
     @Column(name = "created_at", nullable = false)
     private Date created_at;
-    
+
     @ManyToOne
     @JoinColumn(name = "sub_category_id", nullable = false)
     private Sub_Category sub_Category;
-    
+
     @ManyToOne
     @JoinColumn(name = "gig_status_id", nullable = false)
     private Gig_Status gig_Status;
-    
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "gig_visible_status_id", nullable = false)
+    private Gig_Visible_Status gig_Visible_Status;
 
     public Gig() {
     }
@@ -95,11 +99,11 @@ public class Gig implements Serializable {
         this.sub_Category = sub_Category;
     }
 
-    public Gig_Status getStatus() {
+    public Gig_Status getGig_Status() {
         return gig_Status;
     }
 
-    public void setStatus(Gig_Status gig_Status) {
+    public void setGig_Status(Gig_Status gig_Status) {
         this.gig_Status = gig_Status;
     }
 
@@ -109,5 +113,13 @@ public class Gig implements Serializable {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Gig_Visible_Status getGig_Visible_Status() {
+        return gig_Visible_Status;
+    }
+
+    public void setGig_Visible_Status(Gig_Visible_Status gig_Visible_Status) {
+        this.gig_Visible_Status = gig_Visible_Status;
     }
 }
