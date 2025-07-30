@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -58,22 +59,28 @@ public class LoadPendingGigs extends HttpServlet {
                     Gig_Status gig_Status = (Gig_Status) criteria2.list().get(0);
 
                     List<Gig> allPendingGigsList = new ArrayList<>();
+                    List<String> allPendingGigsImagesList = new ArrayList<>();
                     for (User user : usersList) {
                         Criteria criteria3 = session.createCriteria(Gig.class);
                         criteria3.add(Restrictions.eq("user", user));
                         criteria3.add(Restrictions.eq("gig_Status", gig_Status));
+                        criteria3.addOrder(Order.desc("created_at"));
 
                         if (!criteria3.list().isEmpty()) {
-                            List<Gig> userGigsList = criteria3.list();
+                            List<Gig> usersGigsList = criteria3.list();
 
-                            for (Gig gig : userGigsList) {
+                            for (Gig gig : usersGigsList) {
                                 allPendingGigsList.add(gig);
+                                String BaseURL = "http://localhost:8080/hireup_backend/gig-images/" + gig.getId() + "/";
+                                String image1URL = BaseURL + "image1.png";
+                                allPendingGigsImagesList.add(image1URL);
                             }
                         }
                     }
 
                     if (allPendingGigsList.size() >= 1) {
                         responseObject.addProperty("status", true);
+                        responseObject.add("allPendingGigsImagesList", gson.toJsonTree(allPendingGigsImagesList));
                         responseObject.add("allPendingGigsList", gson.toJsonTree(allPendingGigsList));
                     } else {
                         responseObject.addProperty("message", "EMPTY");
