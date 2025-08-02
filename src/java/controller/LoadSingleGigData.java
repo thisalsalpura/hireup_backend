@@ -5,6 +5,7 @@
 package controller;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import entity.FAQ;
 import entity.Gig;
@@ -36,7 +37,7 @@ public class LoadSingleGigData extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
         JsonObject responseObject = new JsonObject();
 
         responseObject.addProperty("status", false);

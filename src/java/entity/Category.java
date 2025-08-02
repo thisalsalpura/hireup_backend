@@ -4,6 +4,7 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -16,17 +17,18 @@ import javax.persistence.Table;
  *
  * @author User
  */
-
 @Entity
 @Table(name = "category")
 public class Category implements Serializable {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
-    
+
     @Column(name = "name", length = 45, nullable = false)
+    @Expose
     private String name;
 
     public Category() {

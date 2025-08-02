@@ -4,6 +4,7 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -16,17 +17,18 @@ import javax.persistence.Table;
  *
  * @author User
  */
-
 @Entity
 @Table(name = "gig_package_type")
 public class Gig_Package_Type implements Serializable {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
-    
+
     @Column(name = "name", length = 10, nullable = false)
+    @Expose
     private String name;
 
     public Gig_Package_Type() {

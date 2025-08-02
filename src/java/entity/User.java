@@ -4,6 +4,7 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Column;
@@ -27,27 +28,35 @@ public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
 
     @Column(name = "fname", length = 45, nullable = false)
+    @Expose
     private String fname;
 
     @Column(name = "lname", length = 45, nullable = false)
+    @Expose
     private String lname;
 
     @Column(name = "email", length = 50, nullable = false)
+    @Expose
     private String email;
 
     @Column(name = "password", length = 60, nullable = false)
+    @Expose
     private String password;
 
     @Column(name = "dob", nullable = true)
+    @Expose
     private Date dob;
 
     @Column(name = "joined_date", nullable = false)
+    @Expose
     private Date joined_date;
 
     @Column(name = "verification", nullable = false)
+    @Expose
     private String verification;
 
     @ManyToOne

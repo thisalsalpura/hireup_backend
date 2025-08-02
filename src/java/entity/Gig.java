@@ -4,8 +4,10 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,6 +16,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
@@ -27,34 +30,45 @@ public class Gig implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
 
     @Lob
     @Column(name = "title", nullable = false)
+    @Expose
     private String title;
 
     @Lob
     @Column(name = "description", nullable = false)
+    @Expose
     private String description;
 
     @Column(name = "created_at", nullable = false)
+    @Expose
     private Date created_at;
 
     @ManyToOne
     @JoinColumn(name = "sub_category_id", nullable = false)
+    @Expose
     private Sub_Category sub_Category;
 
     @ManyToOne
     @JoinColumn(name = "gig_status_id", nullable = false)
+    @Expose
     private Gig_Status gig_Status;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @Expose
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "gig_visible_status_id", nullable = false)
+    @Expose
     private Gig_Visible_Status gig_Visible_Status;
+
+    @OneToMany(mappedBy = "gig")
+    private List<Gig_Has_Package> gigHasPackages;
 
     public Gig() {
     }
@@ -121,5 +135,13 @@ public class Gig implements Serializable {
 
     public void setGig_Visible_Status(Gig_Visible_Status gig_Visible_Status) {
         this.gig_Visible_Status = gig_Visible_Status;
+    }
+
+    public List<Gig_Has_Package> getGigHasPackages() {
+        return gigHasPackages;
+    }
+
+    public void setGigHasPackages(List<Gig_Has_Package> gigHasPackages) {
+        this.gigHasPackages = gigHasPackages;
     }
 }

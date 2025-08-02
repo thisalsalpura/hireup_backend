@@ -4,6 +4,7 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -18,31 +19,36 @@ import javax.persistence.Table;
  *
  * @author User
  */
-
 @Entity
 @Table(name = "gig_has_package")
 public class Gig_Has_Package implements Serializable {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
-    
+
     @ManyToOne
     @JoinColumn(name = "gig_id", nullable = false)
+    @Expose
     private Gig gig;
-    
+
     @ManyToOne
     @JoinColumn(name = "gig_package_type_id", nullable = false)
+    @Expose
     private Gig_Package_Type package_Type;
-    
+
     @Column(name = "price", nullable = false)
+    @Expose
     private double price;
-    
+
     @Column(name = "delivery_time", nullable = false)
+    @Expose
     private int delivery_time;
-    
+
     @Column(name = "extra_note", nullable = false)
+    @Expose
     private String extra_note;
 
     public Gig_Has_Package() {
