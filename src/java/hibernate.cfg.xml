@@ -34,5 +34,6 @@
         <mapping class="entity.User_As_Seller_Has_Seller_Education" />
         <mapping class="entity.Seller_Skills" />
         <mapping class="entity.User_As_Seller_Has_Seller_Skills" />
+        <mapping class="entity.Cart" />
     </session-factory>
 </hibernate-configuration>
