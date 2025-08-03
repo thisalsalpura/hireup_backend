@@ -37,7 +37,7 @@ public class LoadCartData extends HttpServlet {
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
 
-        HttpSession httpSession = request.getSession(true);
+        HttpSession httpSession = request.getSession(false);
 
         Session session = HibernateUtil.getSessionFactory().openSession();
 

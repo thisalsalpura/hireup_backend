@@ -44,12 +44,12 @@ public class AddToCart extends HttpServlet {
 
         HttpSession httpSession = request.getSession(true);
 
+        Session session = HibernateUtil.getSessionFactory().openSession();
+
         if (httpSession != null && httpSession.getAttribute("user") != null) {
             User user = (User) httpSession.getAttribute("user");
 
             if (user.getUser_Status().getValue().equals("Active") && user.getVerification().equals("VERIFIED!")) {
-                Session session = HibernateUtil.getSessionFactory().openSession();
-
                 Criteria criteria = session.createCriteria(Gig_Has_Package.class);
                 criteria.add(Restrictions.eq("id", gigPackageId));
                 if (!criteria.list().isEmpty()) {
@@ -61,17 +61,19 @@ public class AddToCart extends HttpServlet {
                     if (!criteria1.list().isEmpty()) {
                         Cart userCartItem = (Cart) criteria1.list().get(0);
                         session.delete(userCartItem);
+                        responseObject.addProperty("status", true);
+                        responseObject.addProperty("message", userCartItem.getGig_Has_Package().getGig().getTitle() + " (" + userCartItem.getGig_Has_Package().getPackage_Type().getName() + " Package) is Removed from Cart!");
                     } else {
                         Cart userCartItem = new Cart();
                         userCartItem.setUser(user);
                         userCartItem.setGig_Has_Package(gig_Has_Package);
                         session.save(userCartItem);
+                        responseObject.addProperty("status", true);
+                        responseObject.addProperty("message", userCartItem.getGig_Has_Package().getGig().getTitle() + " (" + userCartItem.getGig_Has_Package().getPackage_Type().getName() + " Package) is Added to Cart!");
                     }
-                    
+
                     session.beginTransaction().commit();
                 }
-                
-                session.close();
             }
         } else {
             List<Integer> cartGigPackagesId = new ArrayList<>();
@@ -82,10 +84,20 @@ public class AddToCart extends HttpServlet {
                 }
             }
 
-            if (cartGigPackagesId.contains(gigPackageId)) {
-                cartGigPackagesId.remove(Integer.valueOf(gigPackageId));
-            } else {
-                cartGigPackagesId.add(gigPackageId);
+            Criteria criteria = session.createCriteria(Gig_Has_Package.class);
+            criteria.add(Restrictions.eq("id", gigPackageId));
+
+            if (!criteria.list().isEmpty()) {
+                Gig_Has_Package userCartItem = (Gig_Has_Package) criteria.list().get(0);
+                if (cartGigPackagesId.contains(gigPackageId)) {
+                    cartGigPackagesId.remove(Integer.valueOf(gigPackageId));
+                    responseObject.addProperty("status", true);
+                    responseObject.addProperty("message", userCartItem.getGig().getTitle() + " (" + userCartItem.getPackage_Type().getName() + " Package) is Removed from Cart!");
+                } else {
+                    cartGigPackagesId.add(gigPackageId);
+                    responseObject.addProperty("status", true);
+                    responseObject.addProperty("message", userCartItem.getGig().getTitle() + " (" + userCartItem.getPackage_Type().getName() + " Package) is Added to Cart!");
+                }
             }
 
             httpSession.setAttribute("cart", cartGigPackagesId);
@@ -96,7 +108,7 @@ public class AddToCart extends HttpServlet {
             response.addCookie(cookie);
         }
 
-        responseObject.addProperty("status", true);
+        session.close();
 
         String responseText = gson.toJson(responseObject);
         response.setContentType("application/json");

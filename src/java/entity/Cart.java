@@ -26,10 +26,12 @@ public class Cart implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @Expose
     private User user;
 
     @ManyToOne

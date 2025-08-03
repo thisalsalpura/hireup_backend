@@ -6,12 +6,15 @@ package controller;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import entity.Cart;
+import entity.Gig_Has_Package;
 import entity.User;
 import entity.User_Status;
 import hibernate.HibernateUtil;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
@@ -114,6 +117,42 @@ public class SignIn extends HttpServlet {
                         httpSession.setAttribute("user", user);
 
                         responseObject.addProperty("message", "WVERIFY");
+                    }
+
+                    if (httpSession != null && httpSession.getAttribute("cart") != null) {
+                        List<Integer> cardItemsIds = (List<Integer>) httpSession.getAttribute("cart");
+                        if (!cardItemsIds.isEmpty()) {
+                            for (Integer cardItemsId : cardItemsIds) {
+                                Criteria criteria2 = session.createCriteria(Gig_Has_Package.class);
+                                criteria2.add(Restrictions.eq("id", cardItemsId));
+                                if (!criteria2.list().isEmpty()) {
+                                    Gig_Has_Package gig_Has_Package = (Gig_Has_Package) criteria2.list().get(0);
+
+                                    User u = null;
+                                    if (httpSession.getAttribute("user") != null) {
+                                        u = (User) httpSession.getAttribute("user");
+                                    } else {
+                                        Criteria criteria3 = session.createCriteria(User.class);
+                                        criteria3.add(Restrictions.eq("email", httpSession.getAttribute("email")));
+                                        if (!criteria3.list().isEmpty()) {
+                                            u = (User) criteria3.list().get(0);
+                                        }
+                                    }
+
+                                    Criteria criteria3 = session.createCriteria(Cart.class);
+                                    criteria3.add(Restrictions.eq("user", u));
+                                    criteria3.add(Restrictions.eq("gig_Has_Package", gig_Has_Package));
+                                    if (criteria3.list().isEmpty()) {
+                                        Cart cart = new Cart();
+                                        cart.setUser(u);
+                                        cart.setGig_Has_Package(gig_Has_Package);
+                                        session.save(cart);
+                                        session.beginTransaction().commit();
+                                    }
+                                }
+                            }
+                        }
+                        httpSession.removeAttribute("cart");
                     }
 
                     Cookie cookie = new Cookie("JSESSIONID", httpSession.getId());
