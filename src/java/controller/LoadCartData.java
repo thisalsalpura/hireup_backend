@@ -51,8 +51,10 @@ public class LoadCartData extends HttpServlet {
                     List<Cart> userCartGigs = criteria.list();
                     List<Cart> userCartGigsList = new ArrayList<>();
                     List<String> userCartGigsImagesList = new ArrayList<>();
+                    double checkoutAmount = 0;
                     for (Cart userCartGig : userCartGigs) {
                         userCartGigsList.add(userCartGig);
+                        checkoutAmount += userCartGig.getGig_Has_Package().getPrice();
                         String BaseURL = "http://localhost:8080/hireup_backend/gig-images/" + userCartGig.getGig_Has_Package().getGig().getId() + "/";
                         String image1URL = BaseURL + "image1.png";
                         userCartGigsImagesList.add(image1URL);
@@ -62,6 +64,7 @@ public class LoadCartData extends HttpServlet {
                     responseObject.addProperty("message", "NEMPTY");
                     responseObject.add("userCartGigsList", gson.toJsonTree(userCartGigsList));
                     responseObject.add("userCartGigsImagesList", gson.toJsonTree(userCartGigsImagesList));
+                    responseObject.addProperty("checkoutAmount", checkoutAmount);
                 } else {
                     responseObject.addProperty("status", true);
                     responseObject.addProperty("message", "EMPTY");
@@ -87,8 +90,10 @@ public class LoadCartData extends HttpServlet {
                 if (!userCartGigs.isEmpty()) {
                     List<Cart> userCartGigsList = new ArrayList<>();
                     List<String> userCartGigsImagesList = new ArrayList<>();
+                    double checkoutAmount = 0;
                     for (Cart userCartGig : userCartGigs) {
                         userCartGigsList.add(userCartGig);
+                        checkoutAmount += userCartGig.getGig_Has_Package().getPrice();
                         String BaseURL = "http://localhost:8080/hireup_backend/gig-images/" + userCartGig.getGig_Has_Package().getGig().getId() + "/";
                         String image1URL = BaseURL + "image1.png";
                         userCartGigsImagesList.add(image1URL);
@@ -98,6 +103,7 @@ public class LoadCartData extends HttpServlet {
                     responseObject.addProperty("message", "NEMPTY");
                     responseObject.add("userCartGigsList", gson.toJsonTree(userCartGigsList));
                     responseObject.add("userCartGigsImagesList", gson.toJsonTree(userCartGigsImagesList));
+                    responseObject.addProperty("checkoutAmount", checkoutAmount);
                 } else {
                     responseObject.addProperty("status", true);
                     responseObject.addProperty("message", "EMPTY");
