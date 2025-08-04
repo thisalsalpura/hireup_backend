@@ -35,5 +35,9 @@
         <mapping class="entity.Seller_Skills" />
         <mapping class="entity.User_As_Seller_Has_Seller_Skills" />
         <mapping class="entity.Cart" />
+        <mapping class="entity.Payment_Status" />
+        <mapping class="entity.Order_Status" />
+        <mapping class="entity.Orders" />
+        <mapping class="entity.Order_Gig" />
     </session-factory>
 </hibernate-configuration>
