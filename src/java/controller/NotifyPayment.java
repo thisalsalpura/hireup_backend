@@ -22,7 +22,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import model.PayHere;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -51,60 +50,65 @@ public class NotifyPayment extends HttpServlet {
         String payhere_currency = request.getParameter("payhere_currency");
         String status_code = request.getParameter("status_code");
         String md5sig = request.getParameter("md5sig");
+        String userId = request.getParameter("custom_1");
 
         Properties prop = new Properties();
-        try (InputStream input = new FileInputStream("C:/Users/User/Documents/NetBeansProjects/hireup_backend/config.properties")) {
+        try (InputStream input = new FileInputStream("C:/Users/User/Documents/NetBeansProjects/hireup_backend/.env.local")) {
             prop.load(input);
             PAYHERE_MERCHANT_SECRET = prop.getProperty("PAYHERE_MERCHANT_SECRET");
 
-            String merchantSecret = PAYHERE_MERCHANT_SECRET;
-            String merchantSecretMD5 = PayHere.generateMD5(merchantSecret);
-            String hash = PayHere.generateMD5(merchant_id + order_id + payhere_amount + payhere_currency + merchantSecretMD5);
+            String localHash = PayHere.generateMD5(merchant_id + order_id + payhere_amount + payhere_currency + status_code + PayHere.generateMD5(PAYHERE_MERCHANT_SECRET).toUpperCase()).toUpperCase();
 
-            if (md5sig.equals(hash) && Integer.parseInt(status_code) == PAYMENT_STATUS_SUCCESS) {
-                HttpSession httpSession = request.getSession(false);
-                User user = (User) httpSession.getAttribute("user");
-
-                Criteria criteria = session.createCriteria(Cart.class);
-                criteria.add(Restrictions.eq("user", user));
+            if (localHash.equalsIgnoreCase(md5sig) && Integer.parseInt(status_code) == PAYMENT_STATUS_SUCCESS) {
+                Criteria criteria = session.createCriteria(User.class);
+                criteria.add(Restrictions.eq("id", Integer.valueOf(userId)));
                 if (!criteria.list().isEmpty()) {
-                    List<Cart> cartList = criteria.list();
+                    User user = (User) criteria.list().get(0);
 
-                    Criteria criteria1 = session.createCriteria(Orders.class);
-                    criteria1.setProjection(Projections.rowCount());
-                    Long count = (Long) criteria1.uniqueResult();
-                    String orderId = "#ORDER-" + (count + 1);
+                    Criteria criteria1 = session.createCriteria(Cart.class);
+                    criteria1.add(Restrictions.eq("user", user));
+                    if (!criteria1.list().isEmpty()) {
+                        List<Cart> cartList = criteria1.list();
 
-                    Criteria criteria2 = session.createCriteria(Order_Status.class);
-                    criteria2.add(Restrictions.eq("value", "Pending"));
-                    if (!criteria2.list().isEmpty()) {
-                        Order_Status order_Status = (Order_Status) criteria2.list().get(0);
+                        Criteria criteria2 = session.createCriteria(Orders.class);
+                        criteria2.setProjection(Projections.rowCount());
+                        Long count = (Long) criteria2.uniqueResult();
+                        String orderId = "#ORDER-" + (count + 1);
 
-                        Criteria criteria3 = session.createCriteria(Payment_Status.class);
-                        criteria3.add(Restrictions.eq("value", "Success"));
+                        Criteria criteria3 = session.createCriteria(Order_Status.class);
+                        criteria3.add(Restrictions.eq("value", "Pending"));
                         if (!criteria3.list().isEmpty()) {
-                            Payment_Status payment_Status = (Payment_Status) criteria3.list().get(0);
+                            Order_Status order_Status = (Order_Status) criteria3.list().get(0);
 
-                            Orders orders = new Orders();
-                            orders.setOrder_id(orderId);
-                            orders.setUser(user);
-                            orders.setPlaced_data(new Date());
-                            orders.setPayment_Status(payment_Status);
-                            orders.setOrder_Status(order_Status);
-                            session.save(orders);
+                            Criteria criteria4 = session.createCriteria(Payment_Status.class);
+                            criteria4.add(Restrictions.eq("value", "Success"));
+                            if (!criteria4.list().isEmpty()) {
+                                Payment_Status payment_Status = (Payment_Status) criteria4.list().get(0);
 
-                            for (Cart cart : cartList) {
-                                Order_Gig order_Gig = new Order_Gig();
-                                order_Gig.setGig_Has_Package(cart.getGig_Has_Package());
-                                order_Gig.setOrders(orders);
-                                session.save(order_Gig);
-                                session.delete(cart);
+                                Orders orders = new Orders();
+                                orders.setOrder_id(orderId);
+                                orders.setUser(user);
+                                orders.setPlaced_data(new Date());
+                                orders.setPayment_Status(payment_Status);
+                                orders.setOrder_Status(order_Status);
+                                session.save(orders);
+
+                                for (Cart cart : cartList) {
+                                    Order_Gig order_Gig = new Order_Gig();
+                                    order_Gig.setGig_Has_Package(cart.getGig_Has_Package());
+                                    order_Gig.setOrders(orders);
+                                    session.save(order_Gig);
+                                    session.delete(cart);
+                                }
+
+                                transaction.commit();
                             }
-
-                            transaction.commit();
                         }
                     }
                 }
+
+                session.close();
+                System.out.println("Payment Confirmed Successfully!");
             }
         } catch (IOException e) {
             transaction.rollback();

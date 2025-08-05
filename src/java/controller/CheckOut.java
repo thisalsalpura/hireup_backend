@@ -48,7 +48,7 @@ public class CheckOut extends HttpServlet {
         Session session = HibernateUtil.getSessionFactory().openSession();
 
         Properties prop = new Properties();
-        try (InputStream input = new FileInputStream("C:/Users/User/Documents/NetBeansProjects/hireup_backend/config.properties")) {
+        try (InputStream input = new FileInputStream("C:/Users/User/Documents/NetBeansProjects/hireup_backend/.env.local")) {
             prop.load(input);
             PAYHERE_MERCHANT_ID = prop.getProperty("PAYHERE_MERCHANT_ID");
             PAYHERE_MERCHANT_SECRET = prop.getProperty("PAYHERE_MERCHANT_SECRET");
@@ -79,18 +79,18 @@ public class CheckOut extends HttpServlet {
                             // PayHere Process
                             String merchantID = PAYHERE_MERCHANT_ID;
                             String merchantSecret = PAYHERE_MERCHANT_SECRET;
-                            String orderID = "#000" + orderId;
+                            String orderID = orderId;
                             String currency = "LKR";
                             String formattedAmount = new DecimalFormat("0.00").format(amount * 30);
                             String merchantSecretMD5 = PayHere.generateMD5(merchantSecret);
                             String hash = PayHere.generateMD5(merchantID + orderID + formattedAmount + currency + merchantSecretMD5);
-
+                            
                             JsonObject payHereJson = new JsonObject();
                             payHereJson.addProperty("sandbox", true);
                             payHereJson.addProperty("merchant_id", merchantID);
                             payHereJson.addProperty("return_url", "");
                             payHereJson.addProperty("cancel_url", "");
-                            payHereJson.addProperty("notify_url", "http://localhost:8080/hireup_backend/NotifyPayment");
+                            payHereJson.addProperty("notify_url", "https://9d48d9aa12de.ngrok-free.app/hireup_backend/NotifyPayment");
                             payHereJson.addProperty("order_id", orderID);
                             payHereJson.addProperty("items", "Cart Gigs");
                             payHereJson.addProperty("amount", formattedAmount);
@@ -103,6 +103,7 @@ public class CheckOut extends HttpServlet {
                             payHereJson.addProperty("address", user.getUser_Has_Address().getLine_1() + ", " + user.getUser_Has_Address().getLine_2());
                             payHereJson.addProperty("city", user.getUser_Has_Address().getCity().getName());
                             payHereJson.addProperty("country", user.getUser_Has_Address().getCity().getCountry().getName());
+                            payHereJson.addProperty("custom_1", user.getId());
 
                             responseObject.addProperty("status", true);
                             responseObject.addProperty("message", "Checkout Completed!");
