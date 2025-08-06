@@ -22,7 +22,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import model.PayHere;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -74,7 +73,7 @@ public class NotifyPayment extends HttpServlet {
                         Criteria criteria2 = session.createCriteria(Orders.class);
                         criteria2.setProjection(Projections.rowCount());
                         Long count = (Long) criteria2.uniqueResult();
-                        String orderId = "#ORDER-" + (count + 1);
+                        String orderId = "ORDER-" + (count + 1);
 
                         Criteria criteria3 = session.createCriteria(Order_Status.class);
                         criteria3.add(Restrictions.eq("value", "Pending"));

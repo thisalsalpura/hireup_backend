@@ -116,6 +116,8 @@ public class LoadCartData extends HttpServlet {
             responseObject.addProperty("status", true);
             responseObject.addProperty("message", "EMPTY");
         }
+        
+        session.close();
 
         String responseText = gson.toJson(responseObject);
         response.setContentType("application/json");

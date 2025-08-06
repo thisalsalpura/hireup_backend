@@ -74,7 +74,7 @@ public class CheckOut extends HttpServlet {
                             Criteria criteria1 = session.createCriteria(Orders.class);
                             criteria1.setProjection(Projections.rowCount());
                             Long count = (Long) criteria1.uniqueResult();
-                            String orderId = "#ORDER-" + (count + 1);
+                            String orderId = "ORDER-" + (count + 1);
 
                             // PayHere Process
                             String merchantID = PAYHERE_MERCHANT_ID;
@@ -89,7 +89,7 @@ public class CheckOut extends HttpServlet {
                             payHereJson.addProperty("merchant_id", merchantID);
                             payHereJson.addProperty("return_url", "https://d4e907869e6d.ngrok-free.app/returnPayment?orderId=" + orderId);
                             payHereJson.addProperty("cancel_url", "https://d4e907869e6d.ngrok-free.app/cancelPayment");
-                            payHereJson.addProperty("notify_url", "https://252beca1188a.ngrok-free.app/hireup_backend/NotifyPayment");
+                            payHereJson.addProperty("notify_url", "https://a5551a32e8c3.ngrok-free.app/hireup_backend/NotifyPayment");
                             payHereJson.addProperty("order_id", orderId);
                             payHereJson.addProperty("items", "Cart Gigs");
                             payHereJson.addProperty("amount", formattedAmount);
@@ -132,6 +132,8 @@ public class CheckOut extends HttpServlet {
             responseObject.addProperty("message", "Something went wrong!");
         }
 
+        session.close();
+        
         String responseText = gson.toJson(responseObject);
         response.setContentType("application/json");
         response.getWriter().write(responseText);
