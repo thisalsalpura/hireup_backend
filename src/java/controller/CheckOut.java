@@ -79,19 +79,18 @@ public class CheckOut extends HttpServlet {
                             // PayHere Process
                             String merchantID = PAYHERE_MERCHANT_ID;
                             String merchantSecret = PAYHERE_MERCHANT_SECRET;
-                            String orderID = orderId;
                             String currency = "LKR";
                             String formattedAmount = new DecimalFormat("0.00").format(amount * 30);
                             String merchantSecretMD5 = PayHere.generateMD5(merchantSecret);
-                            String hash = PayHere.generateMD5(merchantID + orderID + formattedAmount + currency + merchantSecretMD5);
+                            String hash = PayHere.generateMD5(merchantID + orderId + formattedAmount + currency + merchantSecretMD5);
                             
                             JsonObject payHereJson = new JsonObject();
                             payHereJson.addProperty("sandbox", true);
                             payHereJson.addProperty("merchant_id", merchantID);
-                            payHereJson.addProperty("return_url", "");
-                            payHereJson.addProperty("cancel_url", "");
-                            payHereJson.addProperty("notify_url", "https://9d48d9aa12de.ngrok-free.app/hireup_backend/NotifyPayment");
-                            payHereJson.addProperty("order_id", orderID);
+                            payHereJson.addProperty("return_url", "https://d4e907869e6d.ngrok-free.app/returnPayment?orderId=" + orderId);
+                            payHereJson.addProperty("cancel_url", "https://d4e907869e6d.ngrok-free.app/cancelPayment");
+                            payHereJson.addProperty("notify_url", "https://252beca1188a.ngrok-free.app/hireup_backend/NotifyPayment");
+                            payHereJson.addProperty("order_id", orderId);
                             payHereJson.addProperty("items", "Cart Gigs");
                             payHereJson.addProperty("amount", formattedAmount);
                             payHereJson.addProperty("currency", currency);
