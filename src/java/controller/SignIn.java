@@ -119,7 +119,7 @@ public class SignIn extends HttpServlet {
                         responseObject.addProperty("message", "WVERIFY");
                     }
 
-                    if (httpSession != null && httpSession.getAttribute("cart") != null) {
+                    if (httpSession.getAttribute("cart") != null) {
                         List<Integer> cardItemsIds = (List<Integer>) httpSession.getAttribute("cart");
                         if (!cardItemsIds.isEmpty()) {
                             for (Integer cardItemsId : cardItemsIds) {

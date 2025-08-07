@@ -73,8 +73,9 @@ public class LoadInvoiceData extends HttpServlet {
 
                         try {
                             HashMap<String, Object> params = new HashMap<>();
-                            params.put("Parameter1", orderId);
-                            params.put("Parameter2", amount);
+                            params.put("Parameter1", String.valueOf(orderId));
+                            params.put("Parameter2", String.valueOf(amount));
+                            params.put("Parameter3", this.getClass().getResource("/reports/hireup-logo.png").toString());
 
                             InputStream path = this.getClass().getResourceAsStream("/reports/hireup_invoice.jasper");
 
@@ -84,36 +85,35 @@ public class LoadInvoiceData extends HttpServlet {
 
                             String appPath = getServletContext().getRealPath("");
                             String newPath = appPath.replace("build" + File.separator + "web", "web" + File.separator + "invoices");
-                            String fileName = newPath + "_" + orderId + ".pdf";
+                            File invoicesDir = new File(newPath);
+                            if (!invoicesDir.exists()) {
+                                invoicesDir.mkdirs();
+                            }
 
+                            String fileName = newPath + File.separator + "Invoice-" + orderId + ".pdf";
                             JasperExportManager.exportReportToPdfFile(report, fileName);
 
                             String BaseURL = "http://localhost:8080/hireup_backend/invoices/";
-                            String invoiceURL = BaseURL + orderId + ".pdf";
+                            String invoiceURL = BaseURL + "Invoice-" + orderId + ".pdf";
 
                             responseObject.addProperty("status", true);
                             responseObject.addProperty("invoiceURL", invoiceURL);
                         } catch (JRException | HibernateException e) {
                             responseObject.addProperty("message", "INVALID!");
-                            System.out.println(e);
                         }
                     } else {
                         responseObject.addProperty("message", "INVALID!");
-                        System.out.println("4");
                     }
                 } else {
                     responseObject.addProperty("message", "INVALID!");
-                    System.out.println("3");
                 }
 
                 session.close();
             } else {
                 responseObject.addProperty("message", "INVALID!");
-                System.out.println("2");
             }
         } else {
             responseObject.addProperty("message", "INVALID!");
-            System.out.println("1");
         }
 
         String responseText = gson.toJson(responseObject);
