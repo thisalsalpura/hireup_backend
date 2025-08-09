@@ -4,6 +4,7 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Column;
@@ -23,13 +24,16 @@ public class Orders implements Serializable {
 
     @Id
     @Column(name = "order_id", length = 50)
+    @Expose
     private String order_id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @Expose
     private User user;
 
     @Column(name = "placed_date", nullable = false)
+    @Expose
     private Date placed_data;
 
     @ManyToOne

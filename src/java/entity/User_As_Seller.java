@@ -4,6 +4,7 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,14 +29,17 @@ public class User_As_Seller implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
     
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @Expose
     private User user;
     
     @Lob
     @Column(name = "about", nullable = true)
+    @Expose
     private String about;
     
     @ManyToOne

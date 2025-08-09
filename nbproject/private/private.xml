@@ -3,8 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/controller/CheckOut.java</file>
-            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/controller/LoadInvoiceData.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/entity/Gig_Has_Package.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/entity/Order_Gig.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/controller/LoadHomeData.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/entity/Gig.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/entity/User.java</file>
         </group>
     </open-files>
 </project-private>

@@ -4,6 +4,7 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -26,14 +27,17 @@ public class Order_Gig implements Serializable{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
     
     @ManyToOne
     @JoinColumn(name = "gig_has_package_id", nullable = false)
+    @Expose
     private Gig_Has_Package gig_Has_Package;
     
     @ManyToOne
     @JoinColumn(name = "orders_order_id", nullable = false)
+    @Expose
     private Orders orders;
 
     public Order_Gig() {
