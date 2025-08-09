@@ -4,6 +4,7 @@
  */
 package entity;
 
+import com.google.gson.annotations.Expose;
 import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -24,9 +25,11 @@ public class Seller_Status implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @Expose
     private int id;
     
     @Column(name = "value", length = 10, nullable = false)
+    @Expose
     private String value;
 
     public Seller_Status() {

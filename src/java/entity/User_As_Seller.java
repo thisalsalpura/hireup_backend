@@ -44,6 +44,7 @@ public class User_As_Seller implements Serializable {
     
     @ManyToOne
     @JoinColumn(name = "seller_status_id", nullable = false)
+    @Expose
     private Seller_Status seller_Status;
 
     public User_As_Seller() {

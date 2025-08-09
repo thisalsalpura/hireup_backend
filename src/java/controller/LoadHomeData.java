@@ -4,6 +4,8 @@
  */
 package controller;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -39,9 +41,30 @@ import org.hibernate.criterion.Restrictions;
 @WebServlet(name = "LoadHomeData", urlPatterns = {"/LoadHomeData"})
 public class LoadHomeData extends HttpServlet {
 
+    private static final int MAX_RESULT = 9;
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+        Gson gson = new GsonBuilder()
+                .excludeFieldsWithoutExposeAnnotation()
+                .addSerializationExclusionStrategy(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        if (f.getDeclaringClass() == User.class) {
+                            String name = f.getName();
+                            return name.equals("email") || name.equals("password") || name.equals("dob")
+                                    || name.equals("joined_date") || name.equals("verification") || name.equals("locale")
+                                    || name.equals("user_Has_Address") || name.equals("user_Type") || name.equals("user_Status");
+                        }
+                        return false;
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return false;
+                    }
+                })
+                .create();
 
         JsonObject responseObject = new JsonObject();
         responseObject.addProperty("status", false);
@@ -102,37 +125,25 @@ public class LoadHomeData extends HttpServlet {
                                 }
                             }
 
-                            for (Gig gig : gigList) {
-                                gig.getUser().setEmail(null);
-                                gig.getUser().setPassword(null);
-                                gig.getUser().setDob(null);
-                                gig.getUser().setJoined_date(null);
-                                gig.getUser().setVerification(null);
-                                gig.getUser().setLocale(null);
-                                gig.getUser().setUser_Has_Address(null);
-                                gig.getUser().setUser_Type(null);
-                                gig.getUser().setUser_Status(null);
-                            }
-
                             if (!gigList.isEmpty() && !gigPriceList.isEmpty() && !gigimageList.isEmpty()) {
-                                responseObject.addProperty("message", "HRECOMMENDED");
+                                responseObject.addProperty("messageRG", "HRECOMMENDED");
                                 responseObject.add("recommendedGigList", gson.toJsonTree(gigList));
                                 responseObject.add("recommendedGigPriceList", gson.toJsonTree(gigPriceList));
                                 responseObject.add("recommendedGigImageList", gson.toJsonTree(gigimageList));
                             } else {
-                                responseObject.addProperty("message", "NHRECOMMENDED");
+                                responseObject.addProperty("messageRG", "NHRECOMMENDED");
                             }
                         } else {
-                            responseObject.addProperty("message", "NHRECOMMENDED");
+                            responseObject.addProperty("messageRG", "NHRECOMMENDED");
                         }
                     } else {
-                        responseObject.addProperty("message", "NHRECOMMENDED");
+                        responseObject.addProperty("messageRG", "NHRECOMMENDED");
                     }
                 } else {
-                    responseObject.addProperty("message", "NHRECOMMENDED");
+                    responseObject.addProperty("messageRG", "NHRECOMMENDED");
                 }
             } else {
-                responseObject.addProperty("message", "NHRECOMMENDED");
+                responseObject.addProperty("messageRG", "NHRECOMMENDED");
             }
         }
 
@@ -161,23 +172,136 @@ public class LoadHomeData extends HttpServlet {
                 List<User_As_Seller> user_As_Sellers = criteria2.list();
                 List<User_As_Seller> sellerList = new ArrayList<>();
                 for (User_As_Seller user_As_Seller : user_As_Sellers) {
-                    User user = user_As_Seller.getUser();
-                    if (user == null || user.getVerification() == null || user.getUser_Status() == null || user.getUser_Status().getValue() == null || user.getUser_Type() == null || user.getUser_Type().getValue() == null || user_As_Seller.getAbout() == null) {
+                    User u = user_As_Seller.getUser();
+                    if (u == null || u.getVerification() == null || u.getUser_Status() == null || u.getUser_Status().getValue() == null || u.getUser_Type() == null || u.getUser_Type().getValue() == null || user_As_Seller.getAbout() == null) {
                         continue;
                     }
 
-                    if (user.getVerification().equals("VERIFIED!") && user.getUser_Status().getValue().equals("Active") && user.getUser_Type().getValue().equals("Seller") && !user_As_Seller.getAbout().isEmpty()) {
+                    if (u.getVerification().equals("VERIFIED!") && u.getUser_Status().getValue().equals("Active") && u.getUser_Type().getValue().equals("Seller") && !user_As_Seller.getAbout().isEmpty()) {
                         sellerList.add(user_As_Seller);
                     }
                 }
-                
+
                 if (!sellerList.isEmpty()) {
                     responseObject.add("sellerList", gson.toJsonTree(sellerList));
                 }
             }
         }
-        
-        
+
+        Criteria criteria2 = session.createCriteria(Gig.class);
+
+        List<Gig> gigsListCount = criteria2.list();
+        List<Gig> verifiedGigsListCount = new ArrayList<>();
+        for (Gig gig : gigsListCount) {
+            if (gig == null || gig.getGig_Status() == null || gig.getGig_Visible_Status() == null || gig.getUser() == null || gig.getUser().getVerification() == null || gig.getUser().getUser_Status() == null) {
+                continue;
+            }
+
+            if (gig.getGig_Status().getValue().equals("Verified") && gig.getGig_Visible_Status().getName().equals("Active") && gig.getUser().getVerification().equals("VERIFIED!") && gig.getUser().getUser_Status().getValue().equals("Active")) {
+                verifiedGigsListCount.add(gig);
+            }
+        }
+
+        int verifiedGigsListSize = verifiedGigsListCount.size();
+
+        String firstResultParam = request.getParameter("firstResult");
+
+        if (firstResultParam != null && !firstResultParam.isEmpty()) {
+            int firstResult = Integer.parseInt(firstResultParam);
+            criteria2.setFirstResult(firstResult);
+            criteria2.setMaxResults(LoadHomeData.MAX_RESULT);
+        }
+
+        if (!criteria2.list().isEmpty()) {
+            List<Gig> gigs = criteria2.list();
+            List<Gig> gigList = new ArrayList<>();
+            List<Double> gigPriceList = new ArrayList<>();
+            List<String> gigImageList = new ArrayList<>();
+
+            Criteria criteria3 = session.createCriteria(Gig_Package_Type.class);
+            criteria3.add(Restrictions.eq("name", "Bronze"));
+            if (!criteria3.list().isEmpty()) {
+                Gig_Package_Type bronzePackage = (Gig_Package_Type) criteria3.list().get(0);
+
+                for (Gig gig : gigs) {
+                    if (gig == null || gig.getGig_Status() == null || gig.getGig_Visible_Status() == null || gig.getUser() == null || gig.getUser().getVerification() == null || gig.getUser().getUser_Status() == null) {
+                        continue;
+                    }
+
+                    if (gig.getGig_Status().getValue().equals("Verified") && gig.getGig_Visible_Status().getName().equals("Active") && gig.getUser().getVerification().equals("VERIFIED!") && gig.getUser().getUser_Status().getValue().equals("Active")) {
+                        gigList.add(gig);
+
+                        Criteria criteria4 = session.createCriteria(Gig_Has_Package.class);
+                        criteria4.add(Restrictions.eq("gig", gig));
+                        criteria4.add(Restrictions.eq("package_Type", bronzePackage));
+
+                        if (!criteria4.list().isEmpty()) {
+                            Gig_Has_Package gigBronzePackage = (Gig_Has_Package) criteria4.list().get(0);
+                            gigPriceList.add(gigBronzePackage.getPrice());
+                        }
+
+                        String BaseURL = "http://localhost:8080/hireup_backend/gig-images/" + gig.getId() + "/";
+                        String image1URL = BaseURL + "image1.png";
+                        gigImageList.add(image1URL);
+                    }
+                }
+
+                if (!gigList.isEmpty() && !gigPriceList.isEmpty() && !gigImageList.isEmpty()) {
+                    responseObject.addProperty("verifiedGigsListSize", verifiedGigsListSize);
+                    responseObject.add("gigList", gson.toJsonTree(gigList));
+                    responseObject.add("gigPriceList", gson.toJsonTree(gigPriceList));
+                    responseObject.add("gigImageList", gson.toJsonTree(gigImageList));
+                }
+            }
+        }
+
+        Criteria criteria3 = session.createCriteria(Order_Gig.class);
+        if (!criteria3.list().isEmpty()) {
+            List<Order_Gig> orderGigs = criteria3.list();
+            List<Gig> gigList = new ArrayList<>();
+            List<Double> gigPriceList = new ArrayList<>();
+            List<String> gigImageList = new ArrayList<>();
+
+            Criteria criteria4 = session.createCriteria(Gig_Package_Type.class);
+            criteria4.add(Restrictions.eq("name", "Bronze"));
+            if (!criteria4.list().isEmpty()) {
+                Gig_Package_Type bronzePackage = (Gig_Package_Type) criteria4.list().get(0);
+
+                for (Order_Gig orderGig : orderGigs) {
+                    Gig gig = orderGig.getGig_Has_Package().getGig();
+                    if (!gigList.contains(gig)) {
+                        if (gig == null || gig.getGig_Status() == null || gig.getGig_Visible_Status() == null || gig.getUser() == null || gig.getUser().getVerification() == null || gig.getUser().getUser_Status() == null) {
+                            continue;
+                        }
+
+                        if (gig.getGig_Status().getValue().equals("Verified") && gig.getGig_Visible_Status().getName().equals("Active") && gig.getUser().getVerification().equals("VERIFIED!") && gig.getUser().getUser_Status().getValue().equals("Active")) {
+                            gigList.add(gig);
+
+                            Criteria criteria5 = session.createCriteria(Gig_Has_Package.class);
+                            criteria5.add(Restrictions.eq("gig", gig));
+                            criteria5.add(Restrictions.eq("package_Type", bronzePackage));
+
+                            if (!criteria5.list().isEmpty()) {
+                                Gig_Has_Package gigBronzePackage = (Gig_Has_Package) criteria5.list().get(0);
+                                gigPriceList.add(gigBronzePackage.getPrice());
+                            }
+
+                            String BaseURL = "http://localhost:8080/hireup_backend/gig-images/" + gig.getId() + "/";
+                            String image1URL = BaseURL + "image1.png";
+                            gigImageList.add(image1URL);
+                        }
+                    }
+                }
+            }
+
+            if (!gigList.isEmpty() && !gigPriceList.isEmpty() && !gigImageList.isEmpty()) {
+                responseObject.add("popularGigList", gson.toJsonTree(gigList));
+                responseObject.add("popularGigPriceList", gson.toJsonTree(gigPriceList));
+                responseObject.add("popularGigImageList", gson.toJsonTree(gigImageList));
+            }
+        }
+
+        session.close();
 
         responseObject.addProperty("status", true);
 

@@ -65,10 +65,12 @@ public class User implements Serializable {
 
     @ManyToOne
     @JoinColumn(name = "user_type_id", nullable = false)
+    @Expose
     private User_Type user_Type;
 
     @ManyToOne
     @JoinColumn(name = "user_status_id", nullable = false)
+    @Expose
     private User_Status user_Status;
 
     @OneToOne
