@@ -34,7 +34,7 @@ public class Orders implements Serializable {
 
     @Column(name = "placed_date", nullable = false)
     @Expose
-    private Date placed_data;
+    private Date placed_date;
 
     @ManyToOne
     @JoinColumn(name = "payment_status_id", nullable = false)
@@ -63,12 +63,12 @@ public class Orders implements Serializable {
         this.user = user;
     }
 
-    public Date getPlaced_data() {
-        return placed_data;
+    public Date getPlaced_date() {
+        return placed_date;
     }
 
-    public void setPlaced_data(Date placed_data) {
-        this.placed_data = placed_data;
+    public void setPlaced_date(Date placed_date) {
+        this.placed_date = placed_date;
     }
 
     public Payment_Status getPayment_Status() {

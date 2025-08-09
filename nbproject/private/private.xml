@@ -3,10 +3,7 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/entity/User_As_Seller.java</file>
-            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/controller/LoadHomeData.java</file>
-            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/controller/AdvancedSearch.java</file>
-            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/entity/User.java</file>
+            <file>file:/C:/Users/User/Documents/NetBeansProjects/hireup_backend/src/java/controller/LoadSingleGigData.java</file>
         </group>
     </open-files>
 </project-private>

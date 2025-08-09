@@ -87,9 +87,9 @@ public class CheckOut extends HttpServlet {
                             JsonObject payHereJson = new JsonObject();
                             payHereJson.addProperty("sandbox", true);
                             payHereJson.addProperty("merchant_id", merchantID);
-                            payHereJson.addProperty("return_url", "https://973e6161d782.ngrok-free.app/returnPayment?orderId=" + orderId);
-                            payHereJson.addProperty("cancel_url", "https://973e6161d782.ngrok-free.app/cancelPayment");
-                            payHereJson.addProperty("notify_url", "https://7af30030fb7d.ngrok-free.app/hireup_backend/NotifyPayment");
+                            payHereJson.addProperty("return_url", "https://6c75744898bc.ngrok-free.app/returnPayment?orderId=" + orderId);
+                            payHereJson.addProperty("cancel_url", "https://6c75744898bc.ngrok-free.app/cancelPayment");
+                            payHereJson.addProperty("notify_url", "https://5368d5010425.ngrok-free.app/hireup_backend/NotifyPayment");
                             payHereJson.addProperty("order_id", orderId);
                             payHereJson.addProperty("items", "Cart Gigs");
                             payHereJson.addProperty("amount", formattedAmount);

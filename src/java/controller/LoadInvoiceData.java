@@ -5,6 +5,7 @@
 package controller;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import entity.Order_Gig;
 import entity.Orders;
@@ -40,7 +41,7 @@ public class LoadInvoiceData extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
 
         String orderId = request.getParameter("orderId");
 
@@ -98,6 +99,7 @@ public class LoadInvoiceData extends HttpServlet {
 
                             responseObject.addProperty("status", true);
                             responseObject.addProperty("invoiceURL", invoiceURL);
+                            responseObject.add("invoice", gson.toJsonTree(orders));
                         } catch (JRException | HibernateException e) {
                             responseObject.addProperty("message", "INVALID!");
                         }

@@ -7,11 +7,13 @@ package controller;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import entity.Cart;
 import entity.FAQ;
 import entity.Gig;
 import entity.Gig_Has_Package;
 import entity.Gig_Package_Type;
 import entity.Gig_Search_Tag_Has_Gig;
+import entity.User;
 import hibernate.HibernateUtil;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import model.Util;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -48,7 +51,7 @@ public class LoadSingleGigData extends HttpServlet {
             Session session = HibernateUtil.getSessionFactory().openSession();
 
             Criteria criteria = session.createCriteria(Gig.class);
-            criteria.add(Restrictions.eq("id", Integer.parseInt(gigId)));
+            criteria.add(Restrictions.eq("id", Integer.valueOf(gigId)));
 
             if (!criteria.list().isEmpty()) {
                 Gig gig = (Gig) criteria.list().get(0);
@@ -134,6 +137,65 @@ public class LoadSingleGigData extends HttpServlet {
                                             if (!criteria8.list().isEmpty()) {
                                                 Gig_Has_Package gigGoldPackage = (Gig_Has_Package) criteria8.list().get(0);
 
+                                                HttpSession httpSession = request.getSession(true);
+
+                                                if (httpSession != null && httpSession.getAttribute("user") != null) {
+                                                    User user = (User) httpSession.getAttribute("user");
+
+                                                    Criteria criteria9 = session.createCriteria(Cart.class);
+                                                    criteria9.add(Restrictions.eq("user", user));
+                                                    criteria9.add(Restrictions.eq("gig_Has_Package", gigBronzePackage));
+                                                    if (!criteria9.list().isEmpty()) {
+                                                        responseObject.addProperty("bpCartStatus", "HAVE");
+                                                    } else {
+                                                        responseObject.addProperty("bpCartStatus", "NHAVE");
+                                                    }
+
+                                                    Criteria criteria10 = session.createCriteria(Cart.class);
+                                                    criteria10.add(Restrictions.eq("user", user));
+                                                    criteria10.add(Restrictions.eq("gig_Has_Package", gigSilverPackage));
+                                                    if (!criteria10.list().isEmpty()) {
+                                                        responseObject.addProperty("spCartStatus", "HAVE");
+                                                    } else {
+                                                        responseObject.addProperty("spCartStatus", "NHAVE");
+                                                    }
+
+                                                    Criteria criteria11 = session.createCriteria(Cart.class);
+                                                    criteria11.add(Restrictions.eq("user", user));
+                                                    criteria11.add(Restrictions.eq("gig_Has_Package", gigGoldPackage));
+                                                    if (!criteria11.list().isEmpty()) {
+                                                        responseObject.addProperty("gpCartStatus", "HAVE");
+                                                    } else {
+                                                        responseObject.addProperty("gpCartStatus", "NHAVE");
+                                                    }
+                                                } else if (httpSession != null && httpSession.getAttribute("cart") != null) {
+                                                    List<Integer> cartGigPackagesId = new ArrayList<>();
+                                                    List<Integer> exsistingCartItemIds = (List<Integer>) httpSession.getAttribute("cart");
+                                                    for (Integer exsistingCartItemId : exsistingCartItemIds) {
+                                                        cartGigPackagesId.add(exsistingCartItemId);
+                                                    }
+
+                                                    if (cartGigPackagesId.contains(gigBronzePackage.getId())) {
+                                                        responseObject.addProperty("bpCartStatus", "HAVE");
+                                                    } else {
+                                                        responseObject.addProperty("bpCartStatus", "NHAVE");
+                                                    }
+
+                                                    if (cartGigPackagesId.contains(gigSilverPackage.getId())) {
+                                                        responseObject.addProperty("spCartStatus", "HAVE");
+                                                    } else {
+                                                        responseObject.addProperty("spCartStatus", "NHAVE");
+                                                    }
+
+                                                    if (cartGigPackagesId.contains(gigGoldPackage.getId())) {
+                                                        responseObject.addProperty("gpCartStatus", "HAVE");
+                                                    } else {
+                                                        responseObject.addProperty("gpCartStatus", "NHAVE");
+                                                    }
+                                                } else {
+                                                    responseObject.addProperty("gpCartStatus", "NHAVE");
+                                                }
+
                                                 responseObject.add("singleGig", gson.toJsonTree(gig));
 
                                                 Criteria cri = session.createCriteria(Gig.class);
@@ -153,7 +215,7 @@ public class LoadSingleGigData extends HttpServlet {
                                                 responseObject.add("gigSearchTags", gson.toJsonTree(searchTagsList));
 
                                                 responseObject.add("gigFaqs", gson.toJsonTree(faqsMap));
-                                                
+
                                                 responseObject.add("gigBronzePackage", gson.toJsonTree(gigBronzePackage));
                                                 responseObject.add("gigSilverPackage", gson.toJsonTree(gigSilverPackage));
                                                 responseObject.add("gigGoldPackage", gson.toJsonTree(gigGoldPackage));

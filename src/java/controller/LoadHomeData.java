@@ -78,7 +78,7 @@ public class LoadHomeData extends HttpServlet {
 
             Criteria criteria = session.createCriteria(Orders.class);
             criteria.add(Restrictions.eq("user", user));
-            criteria.addOrder(Order.desc("placed_data"));
+            criteria.addOrder(Order.desc("placed_date"));
             if (!criteria.list().isEmpty()) {
                 Orders orders = (Orders) criteria.list().get(0);
 

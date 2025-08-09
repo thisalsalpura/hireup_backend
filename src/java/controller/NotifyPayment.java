@@ -88,7 +88,7 @@ public class NotifyPayment extends HttpServlet {
                                 Orders orders = new Orders();
                                 orders.setOrder_id(orderId);
                                 orders.setUser(user);
-                                orders.setPlaced_data(new Date());
+                                orders.setPlaced_date(new Date());
                                 orders.setPayment_Status(payment_Status);
                                 orders.setOrder_Status(order_Status);
                                 session.save(orders);
