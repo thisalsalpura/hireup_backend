@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.MatchMode;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
@@ -189,68 +190,63 @@ public class LoadHomeData extends HttpServlet {
         }
 
         Criteria criteria2 = session.createCriteria(Gig.class);
-
-        List<Gig> gigsListCount = criteria2.list();
-        List<Gig> verifiedGigsListCount = new ArrayList<>();
-        for (Gig gig : gigsListCount) {
-            if (gig == null || gig.getGig_Status() == null || gig.getGig_Visible_Status() == null || gig.getUser() == null || gig.getUser().getVerification() == null || gig.getUser().getUser_Status() == null) {
-                continue;
-            }
-
-            if (gig.getGig_Status().getValue().equals("Verified") && gig.getGig_Visible_Status().getName().equals("Active") && gig.getUser().getVerification().equals("VERIFIED!") && gig.getUser().getUser_Status().getValue().equals("Active")) {
-                verifiedGigsListCount.add(gig);
-            }
+        
+        String searchText = request.getParameter("searchText");
+        if (searchText != null && !searchText.isEmpty()) {
+            criteria2.add(Restrictions.like("title", searchText, MatchMode.ANYWHERE));
         }
 
+        criteria2.createAlias("gig_Status", "gigStatus");
+        criteria2.createAlias("gig_Visible_Status", "gigVisibleStatus");
+        criteria2.createAlias("user", "user");
+        criteria2.createAlias("user.user_Status", "userStatus");
+        criteria2.add(Restrictions.eq("gigStatus.value", "Verified"));
+        criteria2.add(Restrictions.eq("gigVisibleStatus.name", "Active"));
+        criteria2.add(Restrictions.eq("user.verification", "VERIFIED!"));
+        criteria2.add(Restrictions.eq("userStatus.value", "Active"));
+
+        List<Gig> verifiedGigsListCount = criteria2.list();
         int verifiedGigsListSize = verifiedGigsListCount.size();
 
         String firstResultParam = request.getParameter("firstResult");
-
         if (firstResultParam != null && !firstResultParam.isEmpty()) {
             int firstResult = Integer.parseInt(firstResultParam);
             criteria2.setFirstResult(firstResult);
             criteria2.setMaxResults(LoadHomeData.MAX_RESULT);
         }
 
-        if (!criteria2.list().isEmpty()) {
-            List<Gig> gigs = criteria2.list();
-            List<Gig> gigList = new ArrayList<>();
-            List<Double> gigPriceList = new ArrayList<>();
-            List<String> gigImageList = new ArrayList<>();
+        List<Gig> homegigs = criteria2.list();
+        List<Gig> homegigList = new ArrayList<>();
+        List<Double> homegigPriceList = new ArrayList<>();
+        List<String> homegigImageList = new ArrayList<>();
 
+        if (!homegigs.isEmpty()) {
             Criteria criteria3 = session.createCriteria(Gig_Package_Type.class);
             criteria3.add(Restrictions.eq("name", "Bronze"));
             if (!criteria3.list().isEmpty()) {
                 Gig_Package_Type bronzePackage = (Gig_Package_Type) criteria3.list().get(0);
-
-                for (Gig gig : gigs) {
-                    if (gig == null || gig.getGig_Status() == null || gig.getGig_Visible_Status() == null || gig.getUser() == null || gig.getUser().getVerification() == null || gig.getUser().getUser_Status() == null) {
-                        continue;
+                
+                for (Gig gig : homegigs) {
+                    homegigList.add(gig);
+                    
+                    Criteria criteria4 = session.createCriteria(Gig_Has_Package.class);
+                    criteria4.add(Restrictions.eq("gig", gig));
+                    criteria4.add(Restrictions.eq("package_Type", bronzePackage));
+                    if (!criteria4.list().isEmpty()) {
+                        Gig_Has_Package gigBronzePackage = (Gig_Has_Package) criteria4.list().get(0);
+                        homegigPriceList.add(gigBronzePackage.getPrice());
                     }
-
-                    if (gig.getGig_Status().getValue().equals("Verified") && gig.getGig_Visible_Status().getName().equals("Active") && gig.getUser().getVerification().equals("VERIFIED!") && gig.getUser().getUser_Status().getValue().equals("Active")) {
-                        gigList.add(gig);
-
-                        Criteria criteria4 = session.createCriteria(Gig_Has_Package.class);
-                        criteria4.add(Restrictions.eq("gig", gig));
-                        criteria4.add(Restrictions.eq("package_Type", bronzePackage));
-
-                        if (!criteria4.list().isEmpty()) {
-                            Gig_Has_Package gigBronzePackage = (Gig_Has_Package) criteria4.list().get(0);
-                            gigPriceList.add(gigBronzePackage.getPrice());
-                        }
-
-                        String BaseURL = "http://localhost:8080/hireup_backend/gig-images/" + gig.getId() + "/";
-                        String image1URL = BaseURL + "image1.png";
-                        gigImageList.add(image1URL);
-                    }
+                    
+                    String BaseURL = "http://localhost:8080/hireup_backend/gig-images/" + gig.getId() + "/";
+                    String image1URL = BaseURL + "image1.png";
+                    homegigImageList.add(image1URL);
                 }
-
-                if (!gigList.isEmpty() && !gigPriceList.isEmpty() && !gigImageList.isEmpty()) {
+                
+                if (!homegigList.isEmpty() && !homegigPriceList.isEmpty() && !homegigImageList.isEmpty()) {
                     responseObject.addProperty("verifiedGigsListSize", verifiedGigsListSize);
-                    responseObject.add("gigList", gson.toJsonTree(gigList));
-                    responseObject.add("gigPriceList", gson.toJsonTree(gigPriceList));
-                    responseObject.add("gigImageList", gson.toJsonTree(gigImageList));
+                    responseObject.add("gigList", gson.toJsonTree(homegigList));
+                    responseObject.add("gigPriceList", gson.toJsonTree(homegigPriceList));
+                    responseObject.add("gigImageList", gson.toJsonTree(homegigImageList));
                 }
             }
         }
