@@ -18,6 +18,7 @@ import javax.persistence.Table;
  *
  * @author User
  */
+
 @Entity
 @Table(name = "locale")
 public class Locale implements Serializable {

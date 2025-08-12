@@ -19,6 +19,7 @@ import javax.persistence.Table;
  *
  * @author User
  */
+
 @Entity
 @Table(name = "cart")
 public class Cart implements Serializable {

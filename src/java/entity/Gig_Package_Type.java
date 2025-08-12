@@ -17,6 +17,7 @@ import javax.persistence.Table;
  *
  * @author User
  */
+
 @Entity
 @Table(name = "gig_package_type")
 public class Gig_Package_Type implements Serializable {

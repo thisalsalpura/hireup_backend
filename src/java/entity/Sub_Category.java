@@ -19,6 +19,7 @@ import javax.persistence.Table;
  *
  * @author User
  */
+
 @Entity
 @Table(name = "sub_category")
 public class Sub_Category implements Serializable {

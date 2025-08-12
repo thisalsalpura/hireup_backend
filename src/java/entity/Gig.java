@@ -23,6 +23,7 @@ import javax.persistence.Table;
  *
  * @author User
  */
+
 @Entity
 @Table(name = "gig")
 public class Gig implements Serializable {
